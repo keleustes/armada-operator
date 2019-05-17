@@ -19,7 +19,7 @@ jobs:
       script:
       - export DMAINREPO=$DOCKER_NAMESPACE/armada-operator-dev
       - export VERSION=v2.13.0
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
+      - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
       - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - docker build -t $DMAINREPO:$VERSION -f build/Dockerfile .
       - docker tag $DMAINREPO:$VERSION $DMAINREPO:latest
