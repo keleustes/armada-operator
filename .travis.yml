@@ -1,0 +1,33 @@
+sudo: true
+
+language: go
+
+go:
+  - "1.12.x"
+
+service:
+  - docker
+
+env:
+  - GO111MODULE=on
+
+install: true
+
+jobs:
+  include:
+    - stage: build docker image
+      script:
+      - export DHEALTHREPO=$DOCKER_NAMESPACE/armada-operator-dev
+      - export VERSION=v2.13.0
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - docker build -t $DHEALTHREPO:$VERSION -f build/Dockerfile .
+      - docker tag $DHEALTHREPO:$VERSION $DHEALTHREPO:latest
+      - docker tag $DHEALTHREPO:$VERSION $DHEALTHREPO:travis-$TRAVIS_BUILD_NUMBER
+      - docker push $DHEALTHREPO
+    - stage: test docker image
+      script:
+      - export DHEALTHREPO=$DOCKER_NAMESPACE/armada-operator-dev
+      - export VERSION=v2.13.0
+      - docker run -d --name test_armada $DHEALTHREPO:$VERSION
+      - docker ps | grep -q test_armada

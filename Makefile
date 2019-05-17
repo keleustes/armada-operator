@@ -50,7 +50,7 @@ generate: setup
 	go run vendor/k8s.io/code-generator/cmd/deepcopy-gen/main.go --input-dirs github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1 -O zz_generated.deepcopy --bounding-dirs github.com/keleustes/armada-operator/pkg/apis
 
 # Build the docker image
-docker-build: fmt docker-build-v2
+docker-build: docker-build-v2
 
 docker-build-v2: vet-v2
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
