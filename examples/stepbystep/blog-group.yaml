@@ -1,0 +1,12 @@
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChartGroup
+metadata:
+  name: blog-group
+spec:
+  description: Deploys Simple Service
+  sequenced: False
+  chart_group:
+    - blog-1
+    - blog-2
+  target_state: deployed

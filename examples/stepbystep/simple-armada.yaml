@@ -1,0 +1,10 @@
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaManifest
+metadata:
+  name: simple-armada
+spec:
+  release_prefix: armada
+  chart_groups:
+    - blog-group
+  target_state: deployed

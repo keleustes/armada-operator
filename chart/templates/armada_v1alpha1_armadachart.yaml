@@ -1,0 +1,3529 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: armadacharts.armada.airshipit.org
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.actual_state
+    description: State
+    name: State
+    type: string
+  - JSONPath: .spec.target_state
+    description: Target State
+    name: Target State
+    type: string
+  - JSONPath: .status.satisfied
+    description: Satisfied
+    name: Satisfied
+    type: boolean
+  group: armada.airshipit.org
+  names:
+    kind: ArmadaChart
+    plural: armadacharts
+    shortNames:
+    - act
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            delete:
+              description: See Delete_.
+              properties:
+                timeout:
+                  description: time (in seconds) to wait for chart to be deleted
+                  format: int64
+                  type: integer
+              type: object
+            dependencies:
+              description: reference any chart dependencies before install
+              items:
+                type: string
+              type: array
+            namespace:
+              description: namespace of your chart
+              type: string
+            protected:
+              description: 'do not delete FAILED releases when encountered from previous
+                run (provide the ''continue_processing'' bool to continue or halt
+                execution (default: halt))'
+              type: object
+            release:
+              description: name of the release (Armada will prepend with ``release-prefix``
+                during processing)
+              type: string
+            revisionHistoryLimit:
+              description: revisionHistoryLimit is the maximum number of revisions
+                that will be maintained in the ArmadaChart's revision history. The
+                revision history consists of all revisions not represented by a currently
+                applied ArmadaChartSpec version. The default value is 10.
+              format: int32
+              type: integer
+            source:
+              description: provide a path to a ``git repo``, ``local dir``, or ``tarball
+                url`` chart
+              properties:
+                location:
+                  description: '``url`` or ``path`` to the chart''s parent directory'
+                  type: string
+                reference:
+                  description: (optional) branch, commit, or reference in the repo
+                    (``master`` if not specified)
+                  type: string
+                subpath:
+                  description: (optional) relative path to target chart from parent
+                    (``.`` if not specified)
+                  type: string
+                type:
+                  description: 'source to build the chart: ``git``, ``local``, or
+                    ``tar``'
+                  type: string
+              required:
+              - location
+              - subpath
+              - type
+              type: object
+            test:
+              description: See Test_.
+              properties:
+                enabled:
+                  type: boolean
+                options:
+                  properties:
+                    cleanup:
+                      type: boolean
+                  type: object
+                timeout:
+                  format: int64
+                  type: integer
+              type: object
+            timeout:
+              description: time (in seconds) allotted for chart to deploy when 'wait'
+                flag is set (DEPRECATED)
+              format: int64
+              type: integer
+            upgrade:
+              description: upgrade the chart managed by the armada yaml
+              properties:
+                options:
+                  properties:
+                    force:
+                      type: boolean
+                  type: object
+                post:
+                  properties:
+                    create:
+                      items:
+                        properties:
+                          labels:
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                        required:
+                        - type
+                        type: object
+                      type: array
+                  type: object
+                pre:
+                  properties:
+                    create:
+                      description: '| pre         | object   | actions performed prior
+                        to updating a release                 |'
+                      items:
+                        properties:
+                          labels:
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                        required:
+                        - type
+                        type: object
+                      type: array
+                    delete:
+                      items:
+                        properties:
+                          labels:
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                        required:
+                        - type
+                        type: object
+                      type: array
+                    update:
+                      items:
+                        properties:
+                          labels:
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                        required:
+                        - type
+                        type: object
+                      type: array
+                  type: object
+              type: object
+            values:
+              description: override any default values in the charts
+              properties:
+                anchor:
+                  description: anchor contains tbd
+                  type: object
+                apiserver:
+                  description: apiserver contains tbd
+                  type: object
+                bootstrap:
+                  description: bootstrap contains tbd
+                  properties:
+                    enabled:
+                      description: enabled contains tbd
+                      type: boolean
+                    ip:
+                      description: ip contains tbd
+                      type: string
+                    script:
+                      description: script contains tbd
+                      type: string
+                  type: object
+                bootstrapping:
+                  description: bootstrapping contains tbd
+                  type: object
+                conf:
+                  description: conf contains tbd
+                  type: object
+                data:
+                  description: data contains tbd
+                  type: object
+                deployment:
+                  additionalProperties:
+                    type: boolean
+                  description: deployment contains tbd
+                  type: object
+                development:
+                  description: development contains tbd
+                  type: object
+                endpoints:
+                  description: 'endpoints contains tbd. JEB: Would have been too consistent.
+                    Different structures are used depending on the direction of the
+                    wind. Endpoints *map[string]AVEndpoint `json:"endpoints,omitempty"`'
+                  properties:
+                    alerts:
+                      description: alerts contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    armada:
+                      description: armada contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    cloudformation:
+                      description: cloudformation contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    cloudwatch:
+                      description: cloudwatch contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    compute:
+                      description: compute contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    dashboard:
+                      description: dashboard contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    deckhand:
+                      description: deckhand contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    elasticsearch:
+                      description: elasticsearch contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    fluentd:
+                      description: fluentd contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    grafana:
+                      description: grafana contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    identity:
+                      description: identity contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    image:
+                      description: image contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    kibana:
+                      description: kibana contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    kubernetesprovisioner:
+                      description: kubernetesprovisioner contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    ldap:
+                      description: ldap contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    monitoring:
+                      description: monitoring contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    nagios:
+                      description: nagios contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    network:
+                      description: network contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    orchestration:
+                      description: orchestration contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    physicalprovisioner:
+                      description: physicalprovisioner contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    placement:
+                      description: placement contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    postgresql:
+                      description: postgresql contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          type: string
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          type: string
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    shipyard:
+                      description: shipyard contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                    volume:
+                      description: volume contains tbd
+                      properties:
+                        auth:
+                          additionalProperties:
+                            properties:
+                              bind:
+                                description: bind contains tbd
+                                type: string
+                              database:
+                                description: database contains tbd
+                                type: string
+                              email:
+                                description: email contains tbd
+                                type: string
+                              password:
+                                description: password contains tbd
+                                type: string
+                              role:
+                                description: role contains tbd
+                                type: string
+                              tls:
+                                description: tls contains tbd
+                                properties:
+                                  ca:
+                                    description: ca contains tbd
+                                    type: string
+                                  client:
+                                    description: client contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                  crt:
+                                    description: crt contains tbd
+                                    type: string
+                                  key:
+                                    description: key contains tbd
+                                    type: string
+                                  peer:
+                                    description: peer contains tbd
+                                    properties:
+                                      ca:
+                                        description: ca contains tbd
+                                        type: string
+                                    type: object
+                                type: object
+                              tmpurlkey:
+                                description: tmpurlkey contains tbd
+                                type: string
+                              username:
+                                description: username contains tbd
+                                type: string
+                            type: object
+                          description: auth contains tbd
+                          type: object
+                        hosts:
+                          description: hosts contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        name:
+                          description: name contains tbd
+                          type: string
+                        namespace:
+                          description: namespace contains tbd
+                          type: string
+                        path:
+                          description: path contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        port:
+                          additionalProperties:
+                            properties:
+                              default:
+                                description: default contains tbd
+                                format: int64
+                                type: integer
+                              internal:
+                                description: internal contains tbd
+                                format: int64
+                                type: integer
+                              nodeport:
+                                description: nodeport contains tbd
+                                format: int64
+                                type: integer
+                              public:
+                                description: public contains tbd
+                                format: int64
+                                type: integer
+                            type: object
+                          description: port contains tbd
+                          type: object
+                        scheme:
+                          description: scheme contains tbd
+                          properties:
+                            default:
+                              description: default contains tbd
+                              type: string
+                            discovery:
+                              description: discovery contains tbd
+                              type: string
+                            public:
+                              description: public contains tbd
+                              type: string
+                          type: object
+                        type:
+                          description: type contains tbd
+                          type: string
+                      type: object
+                  type: object
+                etcd:
+                  additionalProperties:
+                    type: string
+                  description: etcd contains tbd
+                  type: object
+                images:
+                  description: images contains tbd
+                  properties:
+                    tags:
+                      additionalProperties:
+                        type: string
+                      description: tags contains tbd
+                      type: object
+                  type: object
+                jobs:
+                  description: jobs contains tbd
+                  type: object
+                labels:
+                  additionalProperties:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  description: labels contains tbd
+                  type: object
+                livenessProbe:
+                  description: livenessProbe contains tbd
+                  type: object
+                manifests:
+                  additionalProperties:
+                    type: boolean
+                  description: manifests contains tbd
+                  type: object
+                monitoring:
+                  description: monitoring contains tbd
+                  type: object
+                network:
+                  description: network contains tbd
+                  type: object
+                networking:
+                  description: networking contains tbd
+                  type: object
+                pod:
+                  description: pod contains tbd
+                  type: object
+                secrets:
+                  description: secrets contains tbd
+                  properties:
+                    anchor:
+                      description: anchor contains tbd
+                      properties:
+                        tls:
+                          description: tls contains tbd
+                          properties:
+                            ca:
+                              description: ca contains tbd
+                              type: string
+                            client:
+                              description: client contains tbd
+                              properties:
+                                ca:
+                                  description: ca contains tbd
+                                  type: string
+                              type: object
+                            crt:
+                              description: crt contains tbd
+                              type: string
+                            key:
+                              description: key contains tbd
+                              type: string
+                            peer:
+                              description: peer contains tbd
+                              properties:
+                                ca:
+                                  description: ca contains tbd
+                                  type: string
+                              type: object
+                          type: object
+                      type: object
+                    etcd:
+                      description: etcd contains tbd
+                      properties:
+                        tls:
+                          description: tls contains tbd
+                          properties:
+                            ca:
+                              description: ca contains tbd
+                              type: string
+                            client:
+                              description: client contains tbd
+                              properties:
+                                ca:
+                                  description: ca contains tbd
+                                  type: string
+                              type: object
+                            crt:
+                              description: crt contains tbd
+                              type: string
+                            key:
+                              description: key contains tbd
+                              type: string
+                            peer:
+                              description: peer contains tbd
+                              properties:
+                                ca:
+                                  description: ca contains tbd
+                                  type: string
+                              type: object
+                          type: object
+                      type: object
+                    keyrings:
+                      description: keyrings contains tbd
+                      properties:
+                        admin:
+                          description: admin contains tbd
+                          type: string
+                      type: object
+                    tls:
+                      description: tls contains tbd
+                      properties:
+                        ca:
+                          description: ca contains tbd
+                          type: string
+                        client:
+                          description: client contains tbd
+                          properties:
+                            ca:
+                              description: ca contains tbd
+                              type: string
+                          type: object
+                        crt:
+                          description: crt contains tbd
+                          type: string
+                        key:
+                          description: key contains tbd
+                          type: string
+                        peer:
+                          description: peer contains tbd
+                          properties:
+                            ca:
+                              description: ca contains tbd
+                              type: string
+                          type: object
+                      type: object
+                  type: object
+                service:
+                  description: service contains tbd
+                  type: object
+                storage:
+                  description: storage contains tbd
+                  type: object
+                storageclass:
+                  description: storageclass contains tbd
+                  type: object
+              type: object
+            wait:
+              description: See `ArmwadaWait`.
+              properties:
+                labels:
+                  description: Base mapping of labels to wait on. They are added to
+                    any labels in each item in the ``resources`` array.
+                  type: object
+                native:
+                  description: See `Wait Native`_.
+                  properties:
+                    enabled:
+                      description: Config for the native ``helm (install|upgrade)
+                        --wait`` flag. defaults to true
+                      type: boolean
+                  type: object
+                resources:
+                  description: Array of `Wait Resource`_ to wait on, with ``labels``
+                    added to each item. Defaults to pods and jobs (if any exist) matching
+                    ``labels``.
+                  items:
+                    properties:
+                      labels:
+                        description: mapping of kubernetes resource labels
+                        type: object
+                      type:
+                        description: 'k8s resource type, supports: controllers (''deployment'',
+                          ''daemonset'', ''statefulset'', ''pod'', ''job'')'
+                        type: string
+                    required:
+                    - type
+                    type: object
+                  type: array
+                timeout:
+                  description: time (in seconds) to wait for chart to deploy
+                  format: int64
+                  type: integer
+              type: object
+          required:
+          - release
+          - source
+          - dependencies
+          type: object
+        status:
+          properties:
+            conditions:
+              description: 'List of conditions and states related to the resource.
+                JEB: Feature kind of overlap with event recorder'
+              items:
+                properties:
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  resourceName:
+                    type: string
+                  resourceVersion:
+                    format: int32
+                    type: integer
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - type
+                - status
+                type: object
+              type: array
+            reason:
+              description: Reason indicates the reason for any related failures.
+              type: string
+            satisfied:
+              description: Satisfied indicates if the release's ActualState satisfies
+                its target state
+              type: boolean
+          required:
+          - satisfied
+          type: object
+  version: v1alpha1
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

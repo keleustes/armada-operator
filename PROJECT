@@ -1,0 +1,4 @@
+version: "1"
+domain: airshipit.org
+output-dir: chart/templates
+repo: github.com/keleustes/armada-operator

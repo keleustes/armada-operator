@@ -1,0 +1,21 @@
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: blog-1
+spec:
+  chart_name: blog-1
+  release: blog-1
+  namespace: default
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values: {}
+  source:
+    type: git
+    location: https://opendev.org/openstack/openstack-helm-infra.git
+    subpath: memcached
+    reference: a367bacb4bd3af55dd11dbc5c9855749a123779d
+  dependencies:
+    - helm-toolkit

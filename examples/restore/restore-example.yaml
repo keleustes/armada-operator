@@ -1,0 +1,16 @@
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaRestore
+metadata:
+  name: restore
+spec:
+  backupStorageType: offsite
+  # ceph:
+  #   cephSecret: thesecret
+  #   path: example
+  offsite:
+    endpoint: sftp://foo.bar
+    forcePathStyle: true
+    offsiteSecret: thesecret
+    path: xxx
+  openstackEndpoints:
+  - https://local.com

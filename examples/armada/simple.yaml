@@ -1,0 +1,67 @@
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: blog-1
+spec:
+  chart_name: blog-1
+  release: blog-1
+  namespace: default
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    conf:
+       foo1: bar1
+       foo2: bar2
+  source:
+    type: local
+    location: /opt/armada/helm-charts/testchart
+    subpath: .
+    reference: 87aad18f7d8c6a1a08f3adc8866efd33bee6aa52
+  dependencies: []
+  target_state: deployed
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: blog-2
+spec:
+  chart_name: blog-2
+  release: blog-2
+  namespace: default
+  values: {}
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  source:
+    type: local
+    location: /opt/armada/helm-charts/testchart
+    subpath: .
+    reference: master
+  dependencies: []
+  target_state: deployed
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChartGroup
+metadata:
+  name: blog-group
+spec:
+  description: Deploys Simple Service
+  sequenced: False
+  chart_group:
+    - blog-1
+    - blog-2
+  target_state: deployed
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaManifest
+metadata:
+  name: simple-armada
+spec:
+  release_prefix: armada
+  chart_groups:
+    - blog-group
+  target_state: deployed
