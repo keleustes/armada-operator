@@ -17,12 +17,12 @@
 package helm
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	helmif "github.com/keleustes/armada-operator/pkg/services"
 	helmv2 "github.com/keleustes/armada-operator/pkg/helmv2"
+	helmif "github.com/keleustes/armada-operator/pkg/services"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 // NewManagerFactory returns a new Helm manager factory capable of installing and uninstalling releases.
 func NewManagerFactory(mgr manager.Manager) helmif.HelmManagerFactory {
-        return helmv2.NewManagerFactory(mgr)
+	return helmv2.NewManagerFactory(mgr)
 }

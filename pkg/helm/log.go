@@ -1,4 +1,4 @@
-// Copyright 2019 The Armada Authors
+// Copyright 2018 The Operator-SDK Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build v3
-
 package helm
 
 import (
-	helmv3 "github.com/keleustes/armada-operator/pkg/helmv3"
-	helmif "github.com/keleustes/armada-operator/pkg/services"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-// NewManagerFactory returns a new Helm manager factory capable of installing and uninstalling releases.
-func NewManagerFactory(mgr manager.Manager) helmif.HelmManagerFactory {
-	return helmv3.NewManagerFactory(mgr)
-}
+var log = logf.Log.WithName("helm")

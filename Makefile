@@ -14,9 +14,6 @@ setup:
 ifndef GOPATH
 	$(error GOPATH not defined, please define GOPATH. Run "go help gopath" to learn more about GOPATH)
 endif
-	# JEB: dep ensure
-	# JEB: mkdir -p vendor/helm.sh
-	# JEB: cd vendor/helm.sh && git clone -b dev-v3 https://github.com/helm/helm.git
 
 clean:
 	rm -fr vendor
@@ -38,10 +35,10 @@ fmt: setup
 	go fmt ./pkg/... ./cmd/...
 
 # Run go vet against code
-vet-v2: setup
+vet-v2: fmt
 	go vet -composites=false -tags=v2 ./pkg/... ./cmd/...
 
-vet-v3: setup
+vet-v3: fmt
 	go vet -composites=false -tags=v3 ./pkg/... ./cmd/...
 
 # Generate code
@@ -50,7 +47,7 @@ generate: setup
 	go run vendor/k8s.io/code-generator/cmd/deepcopy-gen/main.go --input-dirs github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1 -O zz_generated.deepcopy --bounding-dirs github.com/keleustes/armada-operator/pkg/apis
 
 # Build the docker image
-docker-build: docker-build-v2
+docker-build: fmt docker-build-v2
 
 docker-build-v2: vet-v2
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
