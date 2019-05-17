@@ -17,17 +17,17 @@ jobs:
   include:
     - stage: build docker image
       script:
-      - export DHEALTHREPO=$DOCKER_NAMESPACE/armada-operator-dev
+      - export DMAINREPO=$DOCKER_NAMESPACE/armada-operator-dev
       - export VERSION=v2.13.0
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
       - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - docker build -t $DHEALTHREPO:$VERSION -f build/Dockerfile .
-      - docker tag $DHEALTHREPO:$VERSION $DHEALTHREPO:latest
-      - docker tag $DHEALTHREPO:$VERSION $DHEALTHREPO:travis-$TRAVIS_BUILD_NUMBER
-      - docker push $DHEALTHREPO
+      - docker build -t $DMAINREPO:$VERSION -f build/Dockerfile .
+      - docker tag $DMAINREPO:$VERSION $DMAINREPO:latest
+      - docker tag $DMAINREPO:$VERSION $DMAINREPO:travis-$TRAVIS_BUILD_NUMBER
+      - docker push $DMAINREPO
     - stage: test docker image
       script:
-      - export DHEALTHREPO=$DOCKER_NAMESPACE/armada-operator-dev
+      - export DMAINREPO=$DOCKER_NAMESPACE/armada-operator-dev
       - export VERSION=v2.13.0
-      - docker run -d --name test_armada $DHEALTHREPO:$VERSION
+      - docker run -d --name test_armada $DMAINREPO:$VERSION
       - docker ps | grep -q test_armada
