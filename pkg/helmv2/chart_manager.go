@@ -192,7 +192,7 @@ func (m chartmanager) loadChartAndConfig() (*cpb.Chart, *cpb.Config, error) {
 
 	// JEB: In order to check how tiller will merge the values
 	// JEB: We should actually check the syntax of the values against a schema there
-	// log.Info("loadChartAndConfig", "config", string(cr))
+	log.Info("loadChartAndConfig", "config", string(cr))
 	// vals, err := chartutil.CoalesceValues(chart, config)
 	// if err != nil {
 	// 	return nil, nil, err

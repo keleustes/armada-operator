@@ -87,7 +87,7 @@ version="v1.4.7"
 
 [[constraint]]
   name = "k8s.io/helm"
-  version = "=v2.13.0"
+  version = "=v2.13.1"
   # name = "helm.sh/helm"
   # source = "https://github.com/helm/helm.git"
   # branch = "dev-v3"

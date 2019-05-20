@@ -83,6 +83,8 @@ type ArmadaChartValues struct {
 	Storage *AVStorage `json:"storage,omitempty"`
 	// storageclass contains tbd
 	Storageclass *AVStorageclass `json:"storageclass,omitempty"`
+	// volume contains tbd
+	Volume *AVVolume `json:"volume,omitempty"`
 }
 
 // ======= ArmadaChartSpec Definition =======

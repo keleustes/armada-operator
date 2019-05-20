@@ -23,7 +23,6 @@ spec:
     reference: master
   dependencies:
     - helm-toolkit
-  target_state: uninitialized
 ---
 apiVersion: armada.airshipit.org/v1alpha1
 kind: ArmadaChart
@@ -49,7 +48,6 @@ spec:
     reference: master
   dependencies:
     - helm-toolkit
-  target_state: uninitialized
 ---
 apiVersion: armada.airshipit.org/v1alpha1
 kind: ArmadaChart
@@ -77,47 +75,3 @@ spec:
     reference: master
   dependencies:
     - helm-toolkit
-  target_state: uninitialized
----
-apiVersion: armada.airshipit.org/v1alpha1
-kind: ArmadaChart
-metadata:
-  name: keystone
-spec:
-  chart_name: keystone
-  test:
-    enabled: true
-  release: keystone
-  namespace: openstack
-  wait:
-    timeout: 100
-    labels:
-      release_group: armada-keystone
-  install:
-    no_hooks: false
-  upgrade:
-    no_hooks: false
-    pre:
-      delete:
-        - name: keystone-bootstrap
-          type: job
-          labels:
-            application: keystone
-            component: bootstrap
-  values:
-    replicas: 3
-#  values:
-#    bootstrap:
-#      script: |
-#        openstack domain create 'ucp'
-#        openstack project create --domain 'ucp' 'service'
-#        openstack user create --domain ucp --project service --project-domain 'ucp' --password armada armada
-#        openstack role add --project-domain ucp --user-domain ucp --user armada --project service admin
-  source:
-    type: local
-    location: /opt/armada/helm-charts/keystone
-    subpath: .
-    reference: master
-  dependencies:
-    - helm-toolkit
-  target_state: uninitialized

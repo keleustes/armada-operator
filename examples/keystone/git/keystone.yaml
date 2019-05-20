@@ -40,7 +40,6 @@ spec:
         host_fqdn_override:
           default: ""
         name: keystone
-        namespace: ucp
         path:
           default: /v3
         port:
@@ -90,7 +89,6 @@ spec:
           default: ""
         hosts:
           default: rabbitmq
-        namespace: null
         path: /keystone
         port:
           amqp:

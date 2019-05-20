@@ -17,6 +17,42 @@ package v1alpha1
 import ()
 
 type AVPod struct {
+	// affinity contains tbd
+	Affinity *AVPodAffinity `json:"affinity,omitempty"`
+	// lifecycle contains tbd
+	Lifecycle *AVPodLifecycle `json:"lifecycle,omitempty"`
+	// replicas contains tbd
+	Replicas map[string]int `json:"replicas,omitempty"`
+	// resources contains tbd
+	Resources map[string]AVPodResources `json:"resources,omitempty"`
+	// security_context contains tbd
+	SecurityContext *AVPodSecurityContext `json:"security_context,omitempty"`
+}
+
+type AVPodSecurityContext struct {
+}
+
+type AVPodResources struct {
+	// limits contains tbd
+	Limits *AVPodResourceSettings `json:"limits,omitempty"`
+	// requests contains tbd
+	Requests *AVPodResourceSettings `json:"requests,omitempty"`
+}
+
+type AVPodResourceSettings struct {
+	// cpu contains tbd
+	Cpu string `json:"cpu,omitempty"`
+	// memory contains tbd
+	Memory string `json:"memory,omitempty"`
+}
+
+type AVPodLifecycle struct {
+}
+
+type AVPodReplicas struct {
+}
+
+type AVPodAffinity struct {
 }
 
 type AVStorageclass struct {
@@ -42,6 +78,28 @@ type AVJobs struct {
 }
 
 type AVStorage struct {
+}
+
+type AVVolume struct {
+	// chown_on_start contains tbd
+	ChownOnStart *bool `json:"chown_on_start,omitempty"`
+	// backup contains tbd
+	Backup *AVVolumeBackup `json:"backup,omitempty"`
+	// class_name contains tbd
+	ClassName *string `json:"class_name,omitempty"`
+	// size contains tbd
+	Size *string `json:"size,omitempty"`
+	// enabled contains tbd
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
+type AVVolumeBackup struct {
+	// class_name contains tbd
+	ClassName *string `json:"class_name,omitempty"`
+	// size contains tbd
+	Size *string `json:"size,omitempty"`
+	// enabled contains tbd
+	Enabled *bool `json:"enabled,omitempty"`
 }
 
 type AVAnchor struct {

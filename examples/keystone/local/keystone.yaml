@@ -1,0 +1,34 @@
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: keystone
+spec:
+  chart_name: keystone
+  test:
+    enabled: true
+  release: keystone
+  namespace: openstack
+  wait:
+    timeout: 100
+    labels:
+      release_group: armada-keystone
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+    pre:
+      delete:
+        - name: keystone-bootstrap
+          type: job
+          labels:
+            application: keystone
+            component: bootstrap
+  values: {}
+  source:
+    type: local
+    location: /opt/armada/helm-charts/keystone
+    subpath: .
+    reference: master
+  dependencies:
+    - helm-toolkit

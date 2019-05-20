@@ -3329,6 +3329,45 @@ spec:
                   type: object
                 pod:
                   description: pod contains tbd
+                  properties:
+                    affinity:
+                      description: affinity contains tbd
+                      type: object
+                    lifecycle:
+                      description: lifecycle contains tbd
+                      type: object
+                    replicas:
+                      additionalProperties:
+                        format: int64
+                        type: integer
+                      description: replicas contains tbd
+                      type: object
+                    resources:
+                      additionalProperties:
+                        properties:
+                          limits:
+                            description: limits contains tbd
+                            properties:
+                              cpu:
+                                description: cpu contains tbd
+                                type: string
+                              memory:
+                                description: memory contains tbd
+                                type: string
+                            type: object
+                          requests:
+                            description: requests contains tbd
+                            properties:
+                              cpu:
+                                description: cpu contains tbd
+                                type: string
+                              memory:
+                                description: memory contains tbd
+                                type: string
+                            type: object
+                        type: object
+                      description: resources contains tbd
+                      type: object
                   type: object
                 secrets:
                   description: secrets contains tbd
@@ -3438,6 +3477,26 @@ spec:
                   type: object
                 storageclass:
                   description: storageclass contains tbd
+                  type: object
+                volume:
+                  description: volume contains tbd
+                  properties:
+                    backup:
+                      description: backup contains tbd
+                      properties:
+                        enabled:
+                          description: enabled contains tbd
+                          type: boolean
+                        size:
+                          description: size contains tbd
+                          type: string
+                      type: object
+                    enabled:
+                      description: enabled contains tbd
+                      type: boolean
+                    size:
+                      description: size contains tbd
+                      type: string
                   type: object
               type: object
             wait:

@@ -1,0 +1,80 @@
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: mariadb
+spec:
+  chart_name: mariadb
+  release: mariadb
+  namespace: openstack
+  wait:
+    timeout: 3600
+    labels:
+      release_group: armada-mariadb
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values: {}
+  source:
+    type: local
+    location: /opt/armada/helm-charts/mariadb
+    subpath: .
+    reference: master
+  dependencies:
+    - helm-toolkit
+  target_state: uninitialized
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: memcached
+spec:
+  chart_name: memcached
+  release: memcached
+  namespace: openstack
+  wait:
+    timeout: 100
+    labels:
+      release_group: armada-memcached
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values: {}
+  source:
+    type: local
+    location: /opt/armada/helm-charts/memcached
+    subpath: .
+    reference: master
+  dependencies:
+    - helm-toolkit
+  target_state: uninitialized
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: rabbitmq
+spec:
+  chart_name: rabbitmq
+  test:
+    enabled: true
+  release: rabbitmq
+  namespace: openstack
+  wait:
+    timeout: 100
+    labels:
+      release_group: armada-rabbitmq
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values: {}
+  source:
+    type: local
+    location: /opt/armada/helm-charts/rabbitmq
+    subpath: .
+    reference: master
+  dependencies:
+    - helm-toolkit
+  target_state: uninitialized

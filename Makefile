@@ -1,7 +1,7 @@
 
 # Image URL to use all building/pushing image targets
 COMPONENT        ?= armada-operator
-VERSION_V2       ?= 2.13.0
+VERSION_V2       ?= 2.13.1
 VERSION_V3       ?= 3.0.0
 DHUBREPO         ?= keleustes/${COMPONENT}-dev
 DOCKER_NAMESPACE ?= keleustes
@@ -77,6 +77,9 @@ purge: setup
 	kubectl delete acg --all
 	kubectl delete amf --all
 	helm delete --purge armada-operator
+
+installlabels:
+	kubectl label nodes airship control-plane=enabled --overwrite
 
 install-v2: docker-build-v2
 	helm install --name armada-operator chart --set images.tags.operator=${IMG_V2}

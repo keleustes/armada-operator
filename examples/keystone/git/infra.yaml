@@ -12,7 +12,7 @@ spec:
   release: mariadb
   source:
     location: https://git.openstack.org/openstack/openstack-helm-infra
-    reference: a367bacb4bd3af55dd11dbc5c9855749a123779d
+    reference: 5e1ecd9840397bf9e8829ce0d98fcb721db1b74e
     subpath: mariadb
     type: git
   upgrade:
@@ -60,6 +60,11 @@ spec:
       replicas:
         ingress: 1
         server: 1
+    volume:
+      enabled: false
+      backup:
+        enabled: false
+
   wait:
     labels:
       release_group: mariadb
@@ -78,7 +83,7 @@ spec:
   release: memcached
   source:
     location: https://git.openstack.org/openstack/openstack-helm-infra
-    reference: a367bacb4bd3af55dd11dbc5c9855749a123779d
+    reference: 5e1ecd9840397bf9e8829ce0d98fcb721db1b74e
     subpath: memcached
     type: git
   upgrade:
@@ -122,7 +127,7 @@ spec:
   release: rabbitmq
   source:
     location: https://git.openstack.org/openstack/openstack-helm-infra
-    reference: a367bacb4bd3af55dd11dbc5c9855749a123779d
+    reference: 5e1ecd9840397bf9e8829ce0d98fcb721db1b74e
     subpath: rabbitmq
     type: git
   upgrade:
@@ -161,6 +166,8 @@ spec:
     pod:
       replicas:
         server: 1
+    volume:
+      enabled: false
   wait:
     labels:
       release_group: rabbitmq
