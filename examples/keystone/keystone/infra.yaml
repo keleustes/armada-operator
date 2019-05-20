@@ -1,0 +1,169 @@
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: mariadb
+spec:
+  chart_name: mariadb
+  dependencies:
+  - helm-toolkit
+  install:
+    no_hooks: false
+  release: mariadb
+  source:
+    location: https://git.openstack.org/openstack/openstack-helm-infra
+    reference: a367bacb4bd3af55dd11dbc5c9855749a123779d
+    subpath: mariadb
+    type: git
+  upgrade:
+    no_hooks: false
+    pre:
+      delete:
+      - labels:
+          release_group: mariadb
+        type: job
+  values:
+    endpoints:
+      oslo_db:
+        auth:
+          admin:
+            password: airsloop123
+            username: root
+        host_fqdn_override:
+          default: ""
+        hosts:
+          default: mariadb
+          discovery: mariadb-discovery
+        path: /DB_NAME
+        port:
+          mysql:
+            default: 3306
+          wsrep:
+            default: 4567
+        scheme: mysql+pymysql
+    images:
+      tags: {}
+    labels:
+      error_server:
+        node_selector_key: control-plane
+        node_selector_value: enabled
+      ingress:
+        node_selector_key: control-plane
+        node_selector_value: enabled
+      prometheus_mysql_exporter:
+        node_selector_key: control-plane
+        node_selector_value: enabled
+      server:
+        node_selector_key: control-plane
+        node_selector_value: enabled
+    pod:
+      replicas:
+        ingress: 1
+        server: 1
+  wait:
+    labels:
+      release_group: mariadb
+    timeout: 300
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: memcached
+spec:
+  chart_name: memcached
+  dependencies:
+  - helm-toolkit
+  install:
+    no_hooks: false
+  release: memcached
+  source:
+    location: https://git.openstack.org/openstack/openstack-helm-infra
+    reference: a367bacb4bd3af55dd11dbc5c9855749a123779d
+    subpath: memcached
+    type: git
+  upgrade:
+    no_hooks: false
+    pre:
+      delete:
+      - labels:
+          release_group: memcached
+        type: job
+  values:
+    endpoints:
+      oslo_cache:
+        host_fqdn_override:
+          default: ""
+        hosts:
+          default: memcached
+        port:
+          memcache:
+            default: 11211
+    images:
+      tags: {}
+    labels:
+      server:
+        node_selector_key: control-plane
+        node_selector_value: enabled
+  wait:
+    labels:
+      release_group: memcached
+    timeout: 600
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: rabbitmq
+spec:
+  chart_name: rabbitmq
+  dependencies:
+  - helm-toolkit
+  install:
+    no_hooks: false
+  release: rabbitmq
+  source:
+    location: https://git.openstack.org/openstack/openstack-helm-infra
+    reference: a367bacb4bd3af55dd11dbc5c9855749a123779d
+    subpath: rabbitmq
+    type: git
+  upgrade:
+    no_hooks: false
+    pre:
+      delete:
+      - labels:
+          release_group: rabbitmq
+        type: job
+  values:
+    endpoints:
+      oslo_messaging:
+        auth:
+          user:
+            password: airsloop123
+            username: rabbitmq
+        host_fqdn_override:
+          default: ""
+        hosts:
+          default: rabbitmq
+        namespace: null
+        path: /keystone
+        port:
+          amqp:
+            default: 5672
+        scheme: rabbit
+    images:
+      tags: {}
+    labels:
+      prometheus_rabbitmq_exporter:
+        node_selector_key: control-plane
+        node_selector_value: enabled
+      server:
+        node_selector_key: control-plane
+        node_selector_value: enabled
+    pod:
+      replicas:
+        server: 1
+  wait:
+    labels:
+      release_group: rabbitmq
+    resources:
+    - type: statefulset
+    timeout: 300

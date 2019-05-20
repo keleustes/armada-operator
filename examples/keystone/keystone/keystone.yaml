@@ -1,0 +1,114 @@
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  labels:
+    component: keystone
+    name: keystone
+  name: keystone
+spec:
+  chart_name: keystone
+  dependencies:
+  - helm-toolkit
+  install:
+    no_hooks: false
+  release: keystone
+  source:
+    location: https://git.openstack.org/openstack/openstack-helm
+    reference: 66ba0be81c66c20b5ffae709358970d5937a0202
+    subpath: keystone
+    type: git
+  upgrade:
+    no_hooks: false
+    post:
+      create: []
+    pre:
+      delete:
+      - labels:
+          release_group: keystone
+        type: job
+  values:
+    endpoints:
+      identity:
+        auth:
+          admin:
+            password: airsloop123
+            project_domain_name: default
+            project_name: admin
+            region_name: RegionOne
+            user_domain_name: default
+            username: admin
+        host_fqdn_override:
+          default: ""
+        name: keystone
+        namespace: ucp
+        path:
+          default: /v3
+        port:
+          api:
+            default: 80
+            internal: 5000
+        scheme:
+          default: http
+          internal: http
+      oslo_cache:
+        host_fqdn_override:
+          default: ""
+        hosts:
+          default: memcached
+        port:
+          memcache:
+            default: 11211
+      oslo_db:
+        auth:
+          admin:
+            password: airsloop123
+          keystone:
+            database: keystone
+            password: airsloop123
+            username: keystone
+        host_fqdn_override:
+          default: ""
+        hosts:
+          default: mariadb
+          discovery: mariadb-discovery
+        path: /keystone
+        port:
+          mysql:
+            default: 3306
+          wsrep:
+            default: 4567
+        scheme: mysql+pymysql
+      oslo_messaging:
+        auth:
+          admin:
+            password: airsloop123
+            username: rabbitmq
+          keystone:
+            password: airsloop123
+            username: keystone
+        host_fqdn_override:
+          default: ""
+        hosts:
+          default: rabbitmq
+        namespace: null
+        path: /keystone
+        port:
+          amqp:
+            default: 5672
+        scheme: rabbit
+    images:
+      tags: {}
+    labels:
+      api:
+        node_selector_key: control-plane
+        node_selector_value: enabled
+      job:
+        node_selector_key: control-plane
+        node_selector_value: enabled
+    pod:
+      replicas:
+        api: 1
+  wait:
+    labels:
+      release_group: keystone
+    timeout: 600

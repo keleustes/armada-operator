@@ -1,0 +1,35 @@
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChartGroup
+metadata:
+  name: keystone-infra-services
+spec:
+  description: "Keystone Infra Services"
+  sequenced: True
+  chart_group:
+    - mariadb
+    - memcached
+    - rabbitmq
+  target_state: uninitialized
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChartGroup
+metadata:
+  name: openstack-keystone
+spec:
+  description: "Deploying OpenStack Keystone"
+  sequenced: True
+  chart_group:
+    - keystone
+  target_state: uninitialized
+---
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaManifest
+metadata:
+  name: armada-manifest
+spec:
+  release_prefix: armada
+  chart_groups:
+    - keystone-infra-services
+    - openstack-keystone
+  target_state: deployed

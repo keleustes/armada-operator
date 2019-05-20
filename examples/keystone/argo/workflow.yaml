@@ -1,0 +1,150 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: armada-manifest
+spec:
+  entrypoint: armada-manifest
+  serviceAccountName: armada-argo-sa
+  templates:
+  - name: armada-manifest
+    dag:
+      tasks:
+      - name: keystone-infra-services
+        template: keystone-infra-services-template
+      - name: openstack-keystone
+        template: openstack-keystone-template
+
+  - name: openstack-keystone-template
+    steps:
+    - - name: enable-keystone
+        template: enable-keystone-template
+    - - name: keystone-ready
+        template: keystone-ready-template
+
+  - name: keystone-infra-services-template
+    steps:
+    - - name: enable-mariadb
+        template: enable-mariadb-template
+    - - name: mariadb-ready
+        template: mariadb-ready-template
+    - - name: enable-memcached
+        template: enable-memcached-template
+    - - name: memcached-ready
+        template: memcached-ready-template
+    - - name: enable-rabbitmq
+        template: enable-rabbitmq-template
+    - - name: rabbitmq-ready
+        template: rabbitmq-ready-template
+
+  - name: enable-mariadb-template
+    activeDeadlineSeconds: 60
+    retryStrategy:
+      limit: 1
+    resource:
+      action: patch
+      mergeStrategy: merge
+      manifest: |
+        apiVersion: armada.airshipit.org/v1alpha1
+        kind: ArmadaChart
+        metadata:
+          name: mariadb
+        spec:
+          target_state: deployed
+
+  - name: mariadb-ready-template
+    activeDeadlineSeconds: 120
+    retryStrategy:
+      limit: 2
+    resource:
+      action: get
+      successCondition: status.actual_state == deployed
+      manifest: |
+        apiVersion: armada.airshipit.org/v1alpha1
+        kind: ArmadaChart
+        metadata:
+          name: mariadb
+
+  - name: enable-memcached-template
+    activeDeadlineSeconds: 60
+    retryStrategy:
+      limit: 1
+    resource:
+      action: patch
+      mergeStrategy: merge
+      manifest: |
+        apiVersion: armada.airshipit.org/v1alpha1
+        kind: ArmadaChart
+        metadata:
+          name: memcached
+        spec:
+          target_state: deployed
+
+  - name: memcached-ready-template
+    activeDeadlineSeconds: 120
+    retryStrategy:
+      limit: 2
+    resource:
+      action: get
+      successCondition: status.actual_state == deployed
+      manifest: |
+        apiVersion: armada.airshipit.org/v1alpha1
+        kind: ArmadaChart
+        metadata:
+          name: memcached
+
+  - name: enable-rabbitmq-template
+    activeDeadlineSeconds: 60
+    retryStrategy:
+      limit: 1
+    resource:
+      action: patch
+      mergeStrategy: merge
+      manifest: |
+        apiVersion: armada.airshipit.org/v1alpha1
+        kind: ArmadaChart
+        metadata:
+          name: rabbitmq
+        spec:
+          target_state: deployed
+
+  - name: rabbitmq-ready-template
+    activeDeadlineSeconds: 120
+    retryStrategy:
+      limit: 2
+    resource:
+      action: get
+      successCondition: status.actual_state == deployed
+      manifest: |
+        apiVersion: armada.airshipit.org/v1alpha1
+        kind: ArmadaChart
+        metadata:
+          name: rabbitmq
+
+  - name: enable-keystone-template
+    activeDeadlineSeconds: 60
+    retryStrategy:
+      limit: 1
+    resource:
+      action: patch
+      mergeStrategy: merge
+      manifest: |
+        apiVersion: armada.airshipit.org/v1alpha1
+        kind: ArmadaChart
+        metadata:
+          name: keystone
+        spec:
+          target_state: deployed
+
+  - name: keystone-ready-template
+    activeDeadlineSeconds: 300
+    retryStrategy:
+      limit: 2
+    resource:
+      action: get
+      successCondition: status.actual_state == deployed
+      manifest: |
+        apiVersion: armada.airshipit.org/v1alpha1
+        kind: ArmadaChart
+        metadata:
+          name: keystone
