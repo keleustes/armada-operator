@@ -11,7 +11,7 @@ spec:
     no_hooks: false
   release: mariadb
   source:
-    location: https://git.openstack.org/openstack/openstack-helm-infra
+    location: https://opendev.org/openstack/openstack-helm-infra
     reference: 5e1ecd9840397bf9e8829ce0d98fcb721db1b74e
     subpath: mariadb
     type: git
@@ -82,7 +82,7 @@ spec:
     no_hooks: false
   release: memcached
   source:
-    location: https://git.openstack.org/openstack/openstack-helm-infra
+    location: https://opendev.org/openstack/openstack-helm-infra
     reference: 5e1ecd9840397bf9e8829ce0d98fcb721db1b74e
     subpath: memcached
     type: git
@@ -126,7 +126,7 @@ spec:
     no_hooks: false
   release: rabbitmq
   source:
-    location: https://git.openstack.org/openstack/openstack-helm-infra
+    location: https://opendev.org/openstack/openstack-helm-infra
     reference: 5e1ecd9840397bf9e8829ce0d98fcb721db1b74e
     subpath: rabbitmq
     type: git

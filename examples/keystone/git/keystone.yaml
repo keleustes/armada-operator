@@ -13,7 +13,7 @@ spec:
     no_hooks: false
   release: keystone
   source:
-    location: https://git.openstack.org/openstack/openstack-helm
+    location: https://opendev.org/openstack/openstack-helm
     reference: 66ba0be81c66c20b5ffae709358970d5937a0202
     subpath: keystone
     type: git

@@ -79,7 +79,9 @@ purge: setup
 	helm delete --purge armada-operator
 
 installlabels:
-	kubectl label nodes airship control-plane=enabled --overwrite
+	kubectl label nodes --all control-plane=enabled --overwrite
+	kubectl label nodes --all openstack-control-plane=enabled --overwrite
+	kubectl label nodes --all ucp-control-plane=enabled --overwrite
 
 install-v2: docker-build-v2
 	helm install --name armada-operator chart --set images.tags.operator=${IMG_V2}
