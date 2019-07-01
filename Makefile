@@ -1,7 +1,7 @@
 
 # Image URL to use all building/pushing image targets
 COMPONENT        ?= armada-operator
-VERSION_V2       ?= 2.13.1
+VERSION_V2       ?= 2.14.1
 VERSION_V3       ?= 3.0.0
 DHUBREPO         ?= keleustes/${COMPONENT}-dev
 DOCKER_NAMESPACE ?= keleustes
@@ -28,7 +28,7 @@ unittest: setup fmt vet-v2
 	echo -e 'export PATH=$${PATH}:/usr/local/kubebuilder/bin'
 	mkdir -p config/crds
 	cp chart/templates/*v1alpha1* config/crds/
-	go test ./pkg/... ./cmd/... -coverprofile cover.out
+	GO111MODULE=on go test ./pkg/... ./cmd/... -coverprofile cover.out
 
 # Run go fmt against code
 fmt: setup
@@ -49,7 +49,7 @@ generate: setup
 # Build the docker image
 docker-build: fmt docker-build-v2
 
-docker-build-v2: vet-v2
+docker-build-v2:
 	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
 	docker build . -f build/Dockerfile -t ${IMG_V2}
 	docker tag ${IMG_V2} ${DHUBREPO}:latest
