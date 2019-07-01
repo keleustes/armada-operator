@@ -32,30 +32,30 @@ unittest: setup fmt vet-v2
 
 # Run go fmt against code
 fmt: setup
-	go fmt ./pkg/... ./cmd/...
+	GO111MODULE=on go fmt ./pkg/... ./cmd/...
 
 # Run go vet against code
 vet-v2: fmt
-	go vet -composites=false -tags=v2 ./pkg/... ./cmd/...
+	GO111MODULE=on go vet -composites=false -tags=v2 ./pkg/... ./cmd/...
 
 vet-v3: fmt
-	go vet -composites=false -tags=v3 ./pkg/... ./cmd/...
+	GO111MODULE=on go vet -composites=false -tags=v3 ./pkg/... ./cmd/...
 
 # Generate code
 generate: setup
-	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd --output-dir ./chart/templates/ --domain airshipit.org --skip-map-validation=false
-	go run vendor/k8s.io/code-generator/cmd/deepcopy-gen/main.go --input-dirs github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1 -O zz_generated.deepcopy --bounding-dirs github.com/keleustes/armada-operator/pkg/apis
+	GO111MODULE=on go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd --output-dir ./chart/templates/ --domain airshipit.org --skip-map-validation=false
+	GO111MODULE=on go run vendor/k8s.io/code-generator/cmd/deepcopy-gen/main.go --input-dirs github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1 -O zz_generated.deepcopy --bounding-dirs github.com/keleustes/armada-operator/pkg/apis
 
 # Build the docker image
 docker-build: fmt docker-build-v2
 
 docker-build-v2: vet-v2
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
+	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
 	docker build . -f build/Dockerfile -t ${IMG_V2}
 	docker tag ${IMG_V2} ${DHUBREPO}:latest
 
 docker-build-v3: vet-v3
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v3 ./cmd/...
+	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v3 ./cmd/...
 	docker build . -f build/Dockerfile -t ${IMG_V3}
 	docker tag ${IMG_V3} ${DHUBREPO}:latest
 
