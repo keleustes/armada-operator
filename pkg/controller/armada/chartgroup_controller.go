@@ -182,8 +182,10 @@ func (r *ChartGroupReconciler) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	reclog.Info("Reconciled ChartGroup")
-	err = r.updateResourceStatus(instance)
-	return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
+	if err = r.updateResourceStatus(instance); err != nil {
+		return reconcile.Result{Requeue: true}, err
+	}
+	return reconcile.Result{}, nil
 }
 
 // logAndRecordFailure adds a failure event to the recorder

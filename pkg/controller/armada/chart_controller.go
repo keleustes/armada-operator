@@ -190,8 +190,10 @@ func (r *ChartReconciler) Reconcile(request reconcile.Request) (reconcile.Result
 	}
 
 	reclog.Info("Reconciled ArmadaChart")
-	err = r.updateResourceStatus(instance)
-	return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
+	if err = r.updateResourceStatus(instance); err != nil {
+		return reconcile.Result{Requeue: true}, err
+	}
+	return reconcile.Result{}, nil
 }
 
 // logAndRecordFailure adds a failure event to the recorder
