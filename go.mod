@@ -37,7 +37,6 @@ require (
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
-	github.com/operator-framework/operator-sdk v0.8.1
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/common v0.2.0 // indirect
 	github.com/prometheus/procfs v0.0.0-20190219184716-e4d4a2206da0 // indirect
@@ -60,7 +59,7 @@ require (
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/helm v2.14.1+incompatible
 	k8s.io/kubernetes v1.15.0 // indirect
-	sigs.k8s.io/controller-runtime v0.2.0-beta.1
+	sigs.k8s.io/controller-runtime v0.2.0-beta.3
 	vbom.ml/util v0.0.0-20180919145318-efcd4e0f9787 // indirect
 )
 
