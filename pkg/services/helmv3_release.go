@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	yaml "gopkg.in/yaml.v2"
-	rpb "helm.sh/helm/pkg/release"
+	rpb "k8s.io/helm/helm/pkg/release"
 )
 
 type HelmRelease struct {

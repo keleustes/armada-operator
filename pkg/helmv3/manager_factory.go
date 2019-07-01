@@ -24,9 +24,9 @@ import (
 	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
 	helmif "github.com/keleustes/armada-operator/pkg/services"
 
-	"helm.sh/helm/pkg/kube"
-	"helm.sh/helm/pkg/storage"
-	"helm.sh/helm/pkg/storage/driver"
+	"k8s.io/helm/helm/pkg/kube"
+	"k8s.io/helm/helm/pkg/storage"
+	"k8s.io/helm/helm/pkg/storage/driver"
 )
 
 type managerFactory struct {

@@ -48,7 +48,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 		BaseReconciler: BaseReconciler{
 			client:   mgr.GetClient(),
 			scheme:   mgr.GetScheme(),
-			recorder: mgr.GetRecorder("act-recorder"),
+			recorder: mgr.GetEventRecorderFor("act-recorder"),
 		},
 		managerFactory: helmmgr.NewManagerFactory(mgr),
 	}

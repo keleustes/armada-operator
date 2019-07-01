@@ -24,7 +24,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"helm.sh/helm/pkg/kube"
+	"k8s.io/helm/helm/pkg/kube"
 )
 
 // NewFromManager returns a Kubernetes client that can be used with

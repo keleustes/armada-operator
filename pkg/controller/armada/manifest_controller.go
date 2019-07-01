@@ -46,7 +46,7 @@ func AddArmadaManifestController(mgr manager.Manager) error {
 		BaseReconciler: BaseReconciler{
 			client:   mgr.GetClient(),
 			scheme:   mgr.GetScheme(),
-			recorder: mgr.GetRecorder("amf-recorder"),
+			recorder: mgr.GetEventRecorderFor("amf-recorder"),
 		},
 		managerFactory: armadamgr.NewManagerFactory(mgr),
 	}

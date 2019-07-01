@@ -33,10 +33,10 @@ import (
 	helmif "github.com/keleustes/armada-operator/pkg/services"
 
 	yaml "gopkg.in/yaml.v2"
-	"helm.sh/helm/pkg/kube"
-	"helm.sh/helm/pkg/storage"
-	cpb "helm.sh/helm/pkg/chart"
-	rpb "helm.sh/helm/pkg/release"
+	"k8s.io/helm/helm/pkg/kube"
+	"k8s.io/helm/helm/pkg/storage"
+	cpb "k8s.io/helm/helm/pkg/chart"
+	rpb "k8s.io/helm/helm/pkg/release"
 )
 
 type chartmanager struct {

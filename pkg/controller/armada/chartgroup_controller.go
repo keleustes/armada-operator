@@ -46,7 +46,7 @@ func AddArmadaChartGroupController(mgr manager.Manager) error {
 		BaseReconciler: BaseReconciler{
 			client:   mgr.GetClient(),
 			scheme:   mgr.GetScheme(),
-			recorder: mgr.GetRecorder("acg-recorder"),
+			recorder: mgr.GetEventRecorderFor("acg-recorder"),
 		},
 		managerFactory: armadamgr.NewManagerFactory(mgr),
 	}
