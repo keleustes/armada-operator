@@ -22,7 +22,7 @@ clean:
 	rm -fr config/crds
 
 # Run tests
-unittest: setup fmt vet-v2
+unittest: setup fmt vet-v3
 	echo "sudo systemctl stop kubelet"
 	echo -e 'docker stop $$(docker ps -qa)'
 	echo -e 'export PATH=$${PATH}:/usr/local/kubebuilder/bin'
@@ -49,21 +49,21 @@ generate: setup
 	GO111MODULE=on controller-gen object paths=./pkg/apis/armada/... output:object:dir=./pkg/apis/armada/v1alpha1 output:none
 
 # Build the docker image
-docker-build: fmt docker-build-v2
+docker-build: fmt docker-build-v3
 
 docker-build-v2:
 	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
 	docker build . -f build/Dockerfile -t ${IMG_V2}
 	docker tag ${IMG_V2} ${DHUBREPO}:latest
 
-docker-build-v3: vet-v3
+docker-build-v3: 
 	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v3 ./cmd/...
 	docker build . -f build/Dockerfile -t ${IMG_V3}
 	docker tag ${IMG_V3} ${DHUBREPO}:latest
 
 
 # Push the docker image
-docker-push: docker-push-v2
+docker-push: docker-push-v3
 
 docker-push-v2:
 	docker push ${IMG_V2}
@@ -72,7 +72,7 @@ docker-push-v3:
 	docker push ${IMG_V3}
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
-install: install-v2
+install: install-v3
 
 purge: setup
 	kubectl delete act --all

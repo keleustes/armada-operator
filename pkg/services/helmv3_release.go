@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	yaml "gopkg.in/yaml.v2"
-	rpb "k8s.io/helm/helm/pkg/release"
+	rpb "helm.sh/helm/pkg/release"
 )
 
 type HelmRelease struct {
@@ -33,8 +33,16 @@ type HelmRelease struct {
 	cached []unstructured.Unstructured
 }
 
+func (r *HelmRelease) GetName() string {
+	return r.Name
+}
+
+func (r *HelmRelease) GetVersion() int32 {
+	return int32(r.Version)
+}
+
 func (r *HelmRelease) GetNotes() string {
-	return r.GetInfo().GetStatus().GetNotes()
+	return r.Info.Notes
 }
 
 // Let's cache the actual objects
@@ -51,7 +59,7 @@ func (release *HelmRelease) GetDependentResources() []unstructured.Unstructured 
 	}
 
 	deps := make([]unstructured.Unstructured, 0)
-	dec := yaml.NewDecoder(bytes.NewBufferString(release.GetManifest()))
+	dec := yaml.NewDecoder(bytes.NewBufferString(release.Manifest))
 	for {
 		var u unstructured.Unstructured
 		err := dec.Decode(&u.Object)
