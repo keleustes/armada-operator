@@ -85,14 +85,14 @@ installlabels:
 	kubectl label nodes --all openstack-control-plane=enabled --overwrite
 	kubectl label nodes --all ucp-control-plane=enabled --overwrite
 
-install-v2: docker-build-v2
+install-v2: docker-build-v2 installlabels
 	helm install --name armada-operator chart --set images.tags.operator=${IMG_V2}
 
-install-v3: docker-build-v3
+install-v3: docker-build-v3 installlabels
 	helm install --name armada-operator chart --set images.tags.operator=${IMG_V3}
 
 # Deploy and purge procedure which do not rely on helm itself
-install-kubectl: setup
+install-kubectl: setup installlabels
 	kubectl apply -f ./chart/templates/armada.airshipit.org_armadachartgroups.yaml
 	kubectl apply -f ./chart/templates/armada.airshipit.org_armadacharts.yaml
 	kubectl apply -f ./chart/templates/armada.airshipit.org_armadamanifests.yaml
