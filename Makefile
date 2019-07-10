@@ -43,8 +43,10 @@ vet-v3: fmt
 
 # Generate code
 generate: setup
-	GO111MODULE=on go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd --output-dir ./chart/templates/ --domain airshipit.org --skip-map-validation=false
-	GO111MODULE=on go run vendor/k8s.io/code-generator/cmd/deepcopy-gen/main.go --input-dirs github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1 -O zz_generated.deepcopy --bounding-dirs github.com/keleustes/armada-operator/pkg/apis
+        # git clone sigs.k8s.io/controller-tools
+        # go install ./cmd/...
+	GO111MODULE=on controller-gen crd paths=./pkg/apis/armada/... crd:trivialVersions=true output:crd:dir=./chart/templates/ output:none
+	GO111MODULE=on controller-gen object paths=./pkg/apis/armada/... output:object:dir=./pkg/apis/armada/v1alpha1 output:none
 
 # Build the docker image
 docker-build: fmt docker-build-v2
@@ -90,25 +92,25 @@ install-v3: docker-build-v3
 	helm install --name armada-operator chart --set images.tags.operator=${IMG_V3}
 
 # Deploy and purge procedure which do not rely on helm itself
-install-kubectl: docker-build
-	kubectl apply -f ./chart/templates/armada_v1alpha1_armadachartgroup.yaml
-	kubectl apply -f ./chart/templates/armada_v1alpha1_armadachart.yaml
-	kubectl apply -f ./chart/templates/armada_v1alpha1_armadamanifest.yaml
+install-kubectl: setup
+	kubectl apply -f ./chart/templates/armada.airshipit.org_armadachartgroups.yaml
+	kubectl apply -f ./chart/templates/armada.airshipit.org_armadacharts.yaml
+	kubectl apply -f ./chart/templates/armada.airshipit.org_armadamanifests.yaml
 	kubectl apply -f ./chart/templates/role_binding.yaml
 	kubectl apply -f ./chart/templates/role.yaml
 	kubectl apply -f ./chart/templates/service_account.yaml
 	kubectl apply -f ./chart/templates/argo_armada_role.yaml
-	kubectl create -f deploy/operator.yaml
+	kubectl apply -f ./deploy/operator.yaml
 
 purge-kubectl: setup
-	kubectl delete -f deploy/operator.yaml
-	kubectl delete -f ./chart/templates/armada_v1alpha1_armadachartgroup.yaml
-	kubectl delete -f ./chart/templates/armada_v1alpha1_armadachart.yaml
-	kubectl delete -f ./chart/templates/armada_v1alpha1_armadamanifest.yaml
-	kubectl delete -f ./chart/templates/role_binding.yaml
-	kubectl delete -f ./chart/templates/role.yaml
-	kubectl delete -f ./chart/templates/service_account.yaml
-	kubectl delete -f ./chart/templates/argo_armada_role.yaml
+	kubectl delete -f ./deploy/operator.yaml --ignore-not-found=true
+	kubectl delete -f ./chart/templates/role_binding.yaml --ignore-not-found=true
+	kubectl delete -f ./chart/templates/role.yaml --ignore-not-found=true
+	kubectl delete -f ./chart/templates/service_account.yaml --ignore-not-found=true
+	kubectl delete -f ./chart/templates/argo_armada_role.yaml --ignore-not-found=true
+	kubectl delete -f ./chart/templates/armada.airshipit.org_armadachartgroups.yaml --ignore-not-found=true
+	kubectl delete -f ./chart/templates/armada.airshipit.org_armadacharts.yaml --ignore-not-found=true
+	kubectl delete -f ./chart/templates/armada.airshipit.org_armadamanifests.yaml --ignore-not-found=true
 
 getcrds:
 	kubectl get armadacharts.armada.airshipit.org

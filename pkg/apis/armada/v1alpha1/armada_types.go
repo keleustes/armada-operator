@@ -129,3 +129,6 @@ type ArmadaTest struct {
 	Timeout int64              `json:"timeout,omitempty"`
 	Options *ArmadaTestOptions `json:"options,omitempty"`
 }
+
+// +k8s:deepcopy-gen=false
+type ArmadaMapString map[string]string
