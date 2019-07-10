@@ -18,3 +18,4 @@ spec:
     subpath: .
     reference: 87aad18f7d8c6a1a08f3adc8866efd33bee6aa52
   dependencies: []
+  target_state: uninitialized
