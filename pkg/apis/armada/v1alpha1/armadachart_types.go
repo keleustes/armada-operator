@@ -60,6 +60,7 @@ type ArmadaChartValues struct {
 	// kube_service contains tbd
 	KubeService *AVKubeService `json:"kube_service,omitempty"`
 	// labels contains tbd
+	// +k8s:openapi-gen=false
 	Labels *map[string]ArmadaMapString `json:"labels,omitempty"`
 	// livenessProbe contains tbd
 	Livenessprobe *AVLivenessprobe `json:"livenessProbe,omitempty"`
