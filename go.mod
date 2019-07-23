@@ -3,28 +3,42 @@ module github.com/keleustes/armada-operator
 go 1.12
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.3.3 // indirect
+	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.4.2 // indirect
+	github.com/Masterminds/sprig v2.20.0+incompatible // indirect
+	github.com/ghodss/yaml v0.0.0-20180820084758-c7ce16629ff4
+	github.com/gobuffalo/packr v1.30.1 // indirect
+	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
 	github.com/google/uuid v1.1.0 // indirect
+	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
+	github.com/jmoiron/sqlx v1.2.0 // indirect
+	github.com/lib/pq v1.2.0 // indirect
+	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/common v0.2.0 // indirect
 	github.com/prometheus/procfs v0.0.0-20190219184716-e4d4a2206da0 // indirect
-	github.com/spf13/pflag v1.0.3 // indirect
+	github.com/rubenv/sql-migrate v0.0.0-20190717103323-87ce952f7079 // indirect
+	github.com/technosophos/moniker v0.0.0-20180509230615-a5dbd03a2245 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.1.0 // indirect
-	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4 // indirect
-	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
-	golang.org/x/sys v0.0.0-20190515120540-06a5c4944438 // indirect
+	github.com/ziutek/mymysql v1.5.4 // indirect
+	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4
+	golang.org/x/net v0.0.0-20190502183928-7f726cade0ab
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
+	gopkg.in/gorp.v1 v1.7.2 // indirect
+	gopkg.in/src-d/go-git.v4 v4.12.0
 	gopkg.in/yaml.v2 v2.2.2
-	helm.sh/helm v3.0.0-alpha.1.0.20190625121145-b9878bd912ff+incompatible
+	helm.sh/helm v3.0.0-alpha.2+incompatible
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
+	k8s.io/cli-runtime v0.0.0
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/kubernetes v1.15.1 // indirect
 	sigs.k8s.io/controller-runtime v0.2.0-beta.3
