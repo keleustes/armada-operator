@@ -15,11 +15,38 @@ ifndef GOPATH
 	$(error GOPATH not defined, please define GOPATH. Run "go help gopath" to learn more about GOPATH)
 endif
 
+.PHONY: clean
 clean:
 	rm -fr vendor
 	rm -fr cover.out
 	rm -fr build/_output
 	rm -fr config/crds
+
+.PHONY: install-tools
+install-tools:
+	cd /tmp && GO111MODULE=on go get sigs.k8s.io/kind@v0.5.0
+	cd /tmp && GO111MODULE=on go get github.com/instrumenta/kubeval@0.13.0
+
+clusterexist=$(shell kind get clusters | grep armada  | wc -l)
+ifeq ($(clusterexist), 1)
+  testcluster=$(shell kind get kubeconfig-path --name="armada")
+  SETKUBECONFIG=KUBECONFIG=$(testcluster)
+else
+  SETKUBECONFIG=
+endif
+
+.PHONY: which-cluster
+which-cluster:
+	echo $(SETKUBECONFIG)
+
+.PHONY: create-testcluster
+create-testcluster:
+	kind create cluster --name armada
+
+.PHONY: delete-testcluster
+delete-testcluster:
+	kind delete cluster --name armada
+
 
 # Run tests
 unittest: setup fmt vet-v2
