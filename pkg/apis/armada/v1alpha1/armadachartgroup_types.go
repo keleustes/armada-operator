@@ -15,11 +15,13 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	yaml "sigs.k8s.io/yaml"
 )
 
 // ======= ArmadaChartGroupSpec Definition =======
@@ -128,14 +130,37 @@ func (obj *ArmadaChartGroup) Equivalent(other *ArmadaChartGroup) bool {
 	return reflect.DeepEqual(obj.Spec.Charts, other.Spec.Charts)
 }
 
-// IsDeleted returns true if the chart group has been deleted
+// IsDeleted returns true if the chartgroup has been deleted
 func (obj *ArmadaChartGroup) IsDeleted() bool {
 	return obj.GetDeletionTimestamp() != nil
 }
 
-// IsTargetStateUnitialized returns true if the chart is not managed by the reconcilier
+// IsTargetStateUnitialized returns true if the chartgroup is not managed by the reconcilier
 func (obj *ArmadaChartGroup) IsTargetStateUninitialized() bool {
 	return obj.Spec.TargetState == StateUninitialized
+}
+
+// IsSatisfied returns true if the chartgroup's actual state meets its target state
+func (obj *ArmadaChartGroup) IsSatisfied() bool {
+	return obj.Spec.TargetState == obj.Status.ActualState
+}
+
+// IsReady returns true if the chartgroup's actual state is deployed
+func (obj *ArmadaChartGroup) IsReady() bool {
+	return obj.Status.ActualState == StateDeployed
+}
+
+// AsYAML returns the ArmadaChartGroup in Yaml form.
+func (obj *ArmadaChartGroup) AsYAML() ([]byte, error) {
+	u := obj.FromArmadaChartGroup()
+	return yaml.Marshal(u.Object)
+}
+
+// Transform ArmadaChartGroup into string for debug purpose
+func (obj *ArmadaChartGroup) AsString() string {
+
+	blob, _ := obj.AsYAML()
+	return fmt.Sprintf("[%s]", string(blob))
 }
 
 // Returns a GKV for ArmadaChartGroup
@@ -208,8 +233,9 @@ func ToArmadaChartGroupList(u *unstructured.Unstructured) *ArmadaChartGroupList 
 // Convert a typed ArmadaChartGroupList into an unstructured.Unstructured
 func (obj *ArmadaChartGroupList) FromArmadaChartGroupList() *unstructured.Unstructured {
 	u := NewArmadaChartGroupListVersionKind("", "")
-	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
+	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
+		tlog.Error(err, "Can't not convert ArmadaChartGroup")
 		return u
 	}
 	u.SetUnstructuredContent(tmp)
@@ -275,7 +301,7 @@ func (obj *ArmadaChartGroups) GetName() string {
 // Loop through the ChartGroup and return the first disabled one
 func (obj *ArmadaChartGroups) GetNextToEnable() *ArmadaChartGroup {
 	for _, act := range obj.List.Items {
-		if !act.IsTargetStateUninitialized() && !act.Status.Satisfied {
+		if !act.IsTargetStateUninitialized() && !act.IsReady() {
 			// The ChartGroup has been enabled but is still deploying
 			return nil
 		}
@@ -299,6 +325,42 @@ func (obj *ArmadaChartGroups) GetAllDisabledChartGroups() *ArmadaChartGroups {
 			// The Chart has not been enabled yet
 			res.List.Items = append(res.List.Items, act)
 		}
+	}
+
+	return res
+}
+
+// Check the state of a ArmadaChartGroups
+func (obj *ArmadaChartGroups) IsReady() bool {
+
+	for _, act := range obj.List.Items {
+		if !act.IsReady() {
+			// The ChartGroup is not ready so the list is not
+			return false
+		}
+	}
+
+	return true
+}
+
+// Transform ArmadaChartGroups into string for debug purpose
+func (obj *ArmadaChartGroups) AsString() string {
+
+	res := ""
+	for _, act := range obj.List.Items {
+		blob, _ := act.AsYAML()
+		res = fmt.Sprintf("%s [%s]", res, string(blob))
+	}
+
+	return res
+}
+
+// Transform ArmadaChartGroups into string for debug purpose
+func (obj *ArmadaChartGroups) States() string {
+
+	res := ""
+	for _, act := range obj.List.Items {
+		res = fmt.Sprintf("%s [%s:%s:%s]", res, act.Name, act.Spec.TargetState, act.Status.ActualState)
 	}
 
 	return res

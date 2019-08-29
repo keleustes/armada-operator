@@ -15,7 +15,7 @@ require (
 	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
 	github.com/emicklei/go-restful v2.9.0+incompatible // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
-	github.com/ghodss/yaml v1.0.0
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-openapi/spec v0.19.0 // indirect
 	github.com/go-openapi/swag v0.18.0 // indirect
 	github.com/gobuffalo/packr v1.30.1 // indirect
@@ -59,6 +59,7 @@ require (
 	k8s.io/helm v2.14.3+incompatible
 	k8s.io/kubernetes v1.15.3 // indirect
 	sigs.k8s.io/controller-runtime v0.2.0-beta.3
+	sigs.k8s.io/yaml v1.1.0
 	vbom.ml/util v0.0.0-20180919145318-efcd4e0f9787 // indirect
 )
 

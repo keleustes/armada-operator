@@ -37,12 +37,18 @@ type chartgroupmanager struct {
 	spec             *av1.ArmadaChartGroupSpec
 	status           *av1.ArmadaChartGroupStatus
 	deployedResource *av1.ArmadaCharts
+
+	isInstalled      bool
 	isUpdateRequired bool
 }
 
 // ResourceName returns the name of the release.
 func (m chartgroupmanager) ResourceName() string {
 	return m.resourceName
+}
+
+func (m chartgroupmanager) IsInstalled() bool {
+	return m.isInstalled
 }
 
 func (m chartgroupmanager) IsUpdateRequired() bool {
@@ -56,8 +62,8 @@ func (m *chartgroupmanager) Sync(ctx context.Context) error {
 	m.deployedResource = av1.NewArmadaCharts(m.resourceName)
 	errs := make([]error, 0)
 	targetResourceList := m.expectedChartList()
-	for _, existingResource := range (*targetResourceList).List.Items {
-		err := m.kubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.Name, Namespace: existingResource.Namespace}, &existingResource)
+	for _, existingResource := range targetResourceList.List.Items {
+		err := m.kubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.GetName(), Namespace: existingResource.GetNamespace()}, &existingResource)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				// Don't want to trace is the error is not a NotFound.
@@ -68,6 +74,8 @@ func (m *chartgroupmanager) Sync(ctx context.Context) error {
 			m.deployedResource.List.Items = append(m.deployedResource.List.Items, existingResource)
 		}
 	}
+
+	acglog.Info("Charts", "deployedResources", m.deployedResource.States())
 
 	// The ChartGroup manager is not in charge of creating the ArmaChart since it
 	// only contains the name of the charts.
@@ -85,6 +93,11 @@ func (m *chartgroupmanager) Sync(ctx context.Context) error {
 	// the isUpdateRequired to true.
 	m.isUpdateRequired = false
 	return nil
+}
+
+// InstallResource checks that the correspoding charts
+func (m chartgroupmanager) InstallResource(ctx context.Context) (*av1.ArmadaCharts, error) {
+	return nil, nil
 }
 
 // UpdateResource performs an update of an ArmadaChartGroup.

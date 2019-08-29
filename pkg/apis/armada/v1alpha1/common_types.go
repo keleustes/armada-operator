@@ -15,7 +15,6 @@
 package v1alpha1
 
 import (
-	// "encoding/json"
 	yaml "gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -219,7 +218,6 @@ func (s *HelmResourceConditionListHelper) InitIfEmpty() []HelmResourceCondition 
 
 // Utility function to print an HelmResourceCondition list
 func (s *HelmResourceConditionListHelper) PrettyPrint() string {
-	// res, _ := json.MarshalIndent(s.Items, "", "\t")
 	res, _ := yaml.Marshal(s.Items)
 	return string(res)
 }

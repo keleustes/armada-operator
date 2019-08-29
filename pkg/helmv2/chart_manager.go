@@ -34,7 +34,7 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
 
-	yaml "github.com/ghodss/yaml"
+	// yaml "github.com/ghodss/yaml"
 	"k8s.io/helm/pkg/chartutil"
 	"k8s.io/helm/pkg/kube"
 	cpb "k8s.io/helm/pkg/proto/hapi/chart"
@@ -42,6 +42,7 @@ import (
 	svc "k8s.io/helm/pkg/proto/hapi/services"
 	"k8s.io/helm/pkg/storage"
 	"k8s.io/helm/pkg/tiller"
+	yaml "sigs.k8s.io/yaml"
 
 	"github.com/mattbaird/jsonpatch"
 )

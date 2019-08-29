@@ -15,11 +15,13 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	yaml "sigs.k8s.io/yaml"
 )
 
 // ======= ArmadaManifestSpec Definition =======
@@ -105,8 +107,9 @@ func ToArmadaManifest(u *unstructured.Unstructured) *ArmadaManifest {
 // Convert a typed ArmadaManifest into an unstructured.Unstructured
 func (obj *ArmadaManifest) FromArmadaManifest() *unstructured.Unstructured {
 	u := NewArmadaManifestVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
-	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
+	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
+		tlog.Error(err, "Can't not convert ArmadaChartGroup")
 		return u
 	}
 	u.SetUnstructuredContent(tmp)
@@ -126,9 +129,32 @@ func (obj *ArmadaManifest) IsDeleted() bool {
 	return obj.GetDeletionTimestamp() != nil
 }
 
-// IsTargetStateUnitialized returns true if the chart is not managed by the reconcilier
+// IsTargetStateUnitialized returns true if the manifest is not managed by the reconcilier
 func (obj *ArmadaManifest) IsTargetStateUninitialized() bool {
 	return obj.Spec.TargetState == StateUninitialized
+}
+
+// IsSatisfied returns true if the manifest's actual state meets its target state
+func (obj *ArmadaManifest) IsSatisfied() bool {
+	return obj.Spec.TargetState == obj.Status.ActualState
+}
+
+// IsReady returns true if the manifest's actual state is deployed
+func (obj *ArmadaManifest) IsReady() bool {
+	return obj.Status.ActualState == StateDeployed
+}
+
+// AsYAML returns the ArmadaChartGroup in Yaml form.
+func (obj *ArmadaManifest) AsYAML() ([]byte, error) {
+	u := obj.FromArmadaManifest()
+	return yaml.Marshal(u.Object)
+}
+
+// Transform ArmadaManifest into string for debug purpose
+func (obj *ArmadaManifest) AsString() string {
+
+	blob, _ := obj.AsYAML()
+	return fmt.Sprintf("[%s]", string(blob))
 }
 
 // GetChartGroups returns a list of mock ArmadaChartGroup matching

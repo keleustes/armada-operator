@@ -18,8 +18,9 @@ package helmv2
 
 import (
 	"fmt"
-	yaml "github.com/ghodss/yaml"
+	// yaml "github.com/ghodss/yaml"
 	cpb "k8s.io/helm/pkg/proto/hapi/chart"
+	yaml "sigs.k8s.io/yaml"
 )
 
 // merge content of Config object

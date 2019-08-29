@@ -15,6 +15,7 @@
 package services
 
 import (
+	"fmt"
 	"strings"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -42,10 +43,42 @@ func (obj *KubernetesDependency) IsUnstructuredReady(u *unstructured.Unstructure
 		{
 			return obj.IsJobReady(u)
 		}
+	case "Service":
+		{
+			return true
+		}
+	case "Deployment":
+		{
+			return true
+		}
+	case "StatefulSet":
+		{
+			return true
+		}
 	case "Workflow":
 		{
 			return obj.IsWorkflowReady(u)
 		}
+	case "ArmadaChart":
+		{
+			return obj.IsArmadaChartReady(u)
+		}
+	case "ArmadaChartGroup":
+		{
+			return obj.IsArmadaChartGroupReady(u)
+		}
+	case "ArmadaManifest":
+		{
+			return obj.IsArmadaManifestReady(u)
+		}
+	// case "PodDisruptionBudget":
+	// case "ServiceAccount":
+	// case "Role":
+	// case "RoleBinding":
+	// case "Secret":
+	// case "ConfigMap":
+	// case "Ingress":
+	// case "CronJob":
 	default:
 		{
 			return true
@@ -54,13 +87,13 @@ func (obj *KubernetesDependency) IsUnstructuredReady(u *unstructured.Unstructure
 }
 
 // Did the status changed
-func (obj *KubernetesDependency) UnstructuredStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) bool {
+func (obj *KubernetesDependency) UnstructuredStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
 	if u == nil || v == nil {
-		return true
+		return true, "", ""
 	}
 
 	if u.GetKind() != v.GetKind() {
-		return false
+		return false, "", ""
 	}
 
 	// TODO(jeb): Any better pattern possible here ?
@@ -73,15 +106,74 @@ func (obj *KubernetesDependency) UnstructuredStatusChanged(u *unstructured.Unstr
 		{
 			return obj.JobStatusChanged(u, v)
 		}
+	case "Service":
+		{
+			return false, "", ""
+		}
+	case "Deployment":
+		{
+			return false, "", ""
+		}
+	case "StatefulSet":
+		{
+			return false, "", ""
+		}
 	case "Workflow":
 		{
 			return obj.WorkflowStatusChanged(u, v)
 		}
+	case "ArmadaChart":
+		{
+			return obj.ArmadaChartStatusChanged(u, v)
+		}
+	case "ArmadaChartGroup":
+		{
+			return obj.ArmadaChartGroupStatusChanged(u, v)
+		}
+	case "ArmadaManifest":
+		{
+			return obj.ArmadaManifestStatusChanged(u, v)
+		}
+	// case "PodDisruptionBudget":
+	// case "ServiceAccount":
+	// case "Role":
+	// case "RoleBinding":
+	// case "Secret":
+	// case "ConfigMap":
+	// case "Ingress":
+	// case "CronJob":
 	default:
 		{
-			return false
+			return false, "", ""
 		}
 	}
+}
+
+// Check the state of the ArmadaChart to figure out if it is still running
+func (obj *KubernetesDependency) IsArmadaChartReady(u *unstructured.Unstructured) bool {
+	return obj.IsCustomResourceReady("status.actual_state", "Deployed", u)
+}
+
+func (obj *KubernetesDependency) ArmadaChartStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
+	return obj.CustomResourceStatusChanged("status.actual_state", u, v)
+}
+
+// Check the state of the ArmadaChartGroup to figure out if it is still running
+func (obj *KubernetesDependency) IsArmadaChartGroupReady(u *unstructured.Unstructured) bool {
+	return obj.IsCustomResourceReady("status.actual_state", "Deployed", u)
+}
+
+func (obj *KubernetesDependency) ArmadaChartGroupStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
+	return obj.CustomResourceStatusChanged("status.actual_state", u, v)
+}
+
+// Check the state of the ArmadaManifest to figure out if it is still running
+func (obj *KubernetesDependency) IsArmadaManifestReady(u *unstructured.Unstructured) bool {
+	return obj.IsCustomResourceReady("status.actual_state", "Deployed", u)
+}
+
+func (obj *KubernetesDependency) ArmadaManifestStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
+	return obj.CustomResourceStatusChanged("status.actual_state", u, v)
 }
 
 // Check the state of the Main workflow to figure out
@@ -92,7 +184,7 @@ func (obj *KubernetesDependency) IsWorkflowReady(u *unstructured.Unstructured) b
 }
 
 // Compare the phase between to Workflow
-func (obj *KubernetesDependency) WorkflowStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) bool {
+func (obj *KubernetesDependency) WorkflowStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
 	return obj.CustomResourceStatusChanged("status.phase", u, v)
 }
 
@@ -100,14 +192,19 @@ func (obj *KubernetesDependency) WorkflowStatusChanged(u *unstructured.Unstructu
 // This code is inspired from the kubernetes-entrypoint project
 func (obj *KubernetesDependency) IsCustomResourceReady(key string, expectedValue string,
 	u *unstructured.Unstructured) bool {
-	return obj.extractField(key, u) == expectedValue
+	actualValue := obj.extractField(key, u)
+	return actualValue == expectedValue
 }
 
 // Compare the status between two CustomResource
+// A status of "" is considered as a default value, hence transition
+// to and from "" is not considered as a status change.
 func (obj *KubernetesDependency) CustomResourceStatusChanged(key string,
 	u *unstructured.Unstructured,
-	v *unstructured.Unstructured) bool {
-	return obj.extractField(key, u) != obj.extractField(key, v)
+	v *unstructured.Unstructured) (bool, string, string) {
+	uValue := obj.extractField(key, u)
+	vValue := obj.extractField(key, v)
+	return uValue != "" && vValue != "" && uValue != vValue, uValue, vValue
 }
 
 // Utility function to extract a field value from an Unstructured object
@@ -200,24 +297,24 @@ func (obj *KubernetesDependency) IsJobReady(u *unstructured.Unstructured) bool {
 }
 
 // Compare the status field between two Job
-func (obj *KubernetesDependency) JobStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) bool {
+func (obj *KubernetesDependency) JobStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
 	if u == nil || v == nil {
-		return true
+		return true, "", ""
 	}
 
 	jobu := batchv1.Job{}
 	err1u := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &jobu)
 	if err1u != nil {
-		return true
+		return true, "", ""
 	}
 
 	jobv := batchv1.Job{}
 	err1v := runtime.DefaultUnstructuredConverter.FromUnstructured(v.UnstructuredContent(), &jobv)
 	if err1v != nil {
-		return true
+		return true, "", ""
 	}
 
-	return jobu.Status.Succeeded != jobv.Status.Succeeded
+	return jobu.Status.Succeeded != jobv.Status.Succeeded, fmt.Sprintf("%v", jobu.Status.Succeeded), fmt.Sprintf("%v", jobv.Status.Succeeded)
 }
 
 // Check the state of a pod
@@ -242,21 +339,21 @@ func (obj *KubernetesDependency) IsPodReady(u *unstructured.Unstructured) bool {
 }
 
 // PodStatus changed
-func (obj *KubernetesDependency) PodStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) bool {
+func (obj *KubernetesDependency) PodStatusChanged(u *unstructured.Unstructured, v *unstructured.Unstructured) (bool, string, string) {
 	if u == nil || v == nil {
-		return true
+		return true, "", ""
 	}
 
 	podu := corev1.Pod{}
 	err1u := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &podu)
 	if err1u != nil {
-		return false
+		return false, "", ""
 	}
 
 	podv := corev1.Pod{}
 	err1v := runtime.DefaultUnstructuredConverter.FromUnstructured(v.UnstructuredContent(), &podv)
 	if err1v != nil {
-		return false
+		return false, "", ""
 	}
 
 	var conditionu corev1.ConditionStatus
@@ -272,5 +369,5 @@ func (obj *KubernetesDependency) PodStatusChanged(u *unstructured.Unstructured, 
 			conditionv = condition.Status
 		}
 	}
-	return conditionu != conditionv
+	return conditionu != conditionv, fmt.Sprintf("%v", conditionu), fmt.Sprintf("%v", conditionv)
 }

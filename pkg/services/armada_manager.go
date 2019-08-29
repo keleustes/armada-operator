@@ -25,6 +25,7 @@ type ArmadaChartGroupManager interface {
 	ResourceName() string
 	IsUpdateRequired() bool
 	Sync(context.Context) error
+	InstallResource(context.Context) (*av1.ArmadaCharts, error)
 	UpdateResource(context.Context) (*av1.ArmadaCharts, *av1.ArmadaCharts, error)
 	ReconcileResource(context.Context) (*av1.ArmadaCharts, error)
 	UninstallResource(context.Context) (*av1.ArmadaCharts, error)
@@ -36,6 +37,7 @@ type ArmadaManifestManager interface {
 	ResourceName() string
 	IsUpdateRequired() bool
 	Sync(context.Context) error
+	InstallResource(context.Context) (*av1.ArmadaChartGroups, error)
 	UpdateResource(context.Context) (*av1.ArmadaChartGroups, *av1.ArmadaChartGroups, error)
 	ReconcileResource(context.Context) (*av1.ArmadaChartGroups, error)
 	UninstallResource(context.Context) (*av1.ArmadaChartGroups, error)

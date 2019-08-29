@@ -15,12 +15,14 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	yaml "sigs.k8s.io/yaml"
 )
 
 type ArmadaChartValues struct {
@@ -194,8 +196,9 @@ func ToArmadaChart(u *unstructured.Unstructured) *ArmadaChart {
 // Convert a typed ArmadaChart into an unstructured.Unstructured
 func (obj *ArmadaChart) FromArmadaChart() *unstructured.Unstructured {
 	u := NewArmadaChartVersionKind(obj.ObjectMeta.Namespace, obj.ObjectMeta.Name)
-	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(*obj)
+	tmp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
+		tlog.Error(err, "Can't not convert ArmadaChart")
 		return u
 	}
 	u.SetUnstructuredContent(tmp)
@@ -223,6 +226,24 @@ func (obj *ArmadaChart) IsTargetStateUninitialized() bool {
 // IsSatisfied returns true if the chart's actual state meets its target state
 func (obj *ArmadaChart) IsSatisfied() bool {
 	return obj.Spec.TargetState == obj.Status.ActualState
+}
+
+// IsReady returns true if the chart's actual state is deployed
+func (obj *ArmadaChart) IsReady() bool {
+	return obj.Status.ActualState == StateDeployed
+}
+
+// AsYAML returns the ArmadaChart in Yaml form.
+func (obj *ArmadaChart) AsYAML() ([]byte, error) {
+	u := obj.FromArmadaChart()
+	return yaml.Marshal(u.Object)
+}
+
+// Transform ArmadaChart into string for debug purpose
+func (obj *ArmadaChart) AsString() string {
+
+	blob, _ := obj.AsYAML()
+	return fmt.Sprintf("[%s]", string(blob))
 }
 
 // Returns a GKV for ArmadaChart
@@ -322,15 +343,15 @@ func (obj *ArmadaCharts) GetName() string {
 	return obj.Name
 }
 
-// Loop through the Chartand return the first disabled one
+// Loop through the Chart and return the first disabled one
 func (obj *ArmadaCharts) GetNextToEnable() *ArmadaChart {
 	for _, act := range obj.List.Items {
-		if !act.IsTargetStateUninitialized() && !act.Status.Satisfied {
-			// The ChartGroup has been enabled but is still deploying
+		if !act.IsTargetStateUninitialized() && !act.IsReady() {
+			// The Chart has been enabled but is still deploying
 			return nil
 		}
 		if act.IsTargetStateUninitialized() {
-			// The ChartGroup has not been enabled yet
+			// The Chart has not been enabled yet
 			return &act
 		}
 	}
@@ -347,6 +368,41 @@ func (obj *ArmadaCharts) GetAllDisabledCharts() *ArmadaCharts {
 			// The Chart has not been enabled yet
 			res.List.Items = append(res.List.Items, act)
 		}
+	}
+
+	return res
+}
+
+// Check the state of a ArmadaCharts
+func (obj *ArmadaCharts) IsReady() bool {
+
+	for _, act := range obj.List.Items {
+		if !act.IsReady() {
+			// The Chart is not ready so the list is not
+			return false
+		}
+	}
+
+	return true
+}
+
+// Transform ArmadaCharts into string for debug purpose
+func (obj *ArmadaCharts) AsString() string {
+
+	res := ""
+	for _, act := range obj.List.Items {
+		blob, _ := act.AsYAML()
+		res = fmt.Sprintf("%s [%s]", res, string(blob))
+	}
+
+	return res
+}
+
+func (obj *ArmadaCharts) States() string {
+
+	res := ""
+	for _, act := range obj.List.Items {
+		res = fmt.Sprintf("%s [%s:%s:%s]", res, act.Name, act.Spec.TargetState, act.Status.ActualState)
 	}
 
 	return res

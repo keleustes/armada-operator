@@ -89,9 +89,11 @@ func (r *BaseReconciler) BuildDependentPredicate() *crtpredicate.Funcs {
 
 			// Filter on Status change
 			dep := &services.KubernetesDependency{}
-			if dep.UnstructuredStatusChanged(u, v) {
+			changed, oldv, newv := dep.UnstructuredStatusChanged(u, v)
+			if changed {
 				log.Info("UpdateEvent. Status changed", "resource", u.GetName(), "namespace", u.GetNamespace(),
-					"apiVersion", u.GroupVersionKind().GroupVersion(), "kind", u.GroupVersionKind().Kind)
+					"apiVersion", u.GroupVersionKind().GroupVersion(), "kind", u.GroupVersionKind().Kind,
+					"old", oldv, "new", newv)
 				return true
 			}
 
