@@ -17,3 +17,4 @@ spec:
     location: https://TO_REPLACE/artifactory/helm-charts/openstack-helm-infra/memcached-ff84ab86dcb1.ff84ab86dcb1.tgz
     subpath: memcached
   dependencies: []
+  target_state: uninitialized

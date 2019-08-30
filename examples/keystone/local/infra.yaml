@@ -23,6 +23,7 @@ spec:
     reference: master
   dependencies:
     - helm-toolkit
+  target_state: deployed
 ---
 apiVersion: armada.airshipit.org/v1alpha1
 kind: ArmadaChart
@@ -48,6 +49,7 @@ spec:
     reference: master
   dependencies:
     - helm-toolkit
+  target_state: deployed
 ---
 apiVersion: armada.airshipit.org/v1alpha1
 kind: ArmadaChart
@@ -75,3 +77,4 @@ spec:
     reference: master
   dependencies:
     - helm-toolkit
+  target_state: deployed

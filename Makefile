@@ -143,5 +143,7 @@ getcrds:
 	kubectl get armadacharts.armada.airshipit.org
 	kubectl get armadachartgroups.armada.airshipit.org
 	kubectl get armadamanifests.armada.airshipit.org
-
 	kubectl get workflows.argoproj.io
+
+deploy-patch:
+	kubectl patch act blog-1 --type merge -p $'spec:\n  target_state: deployed'

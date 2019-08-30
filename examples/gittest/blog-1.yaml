@@ -19,3 +19,4 @@ spec:
     reference: a367bacb4bd3af55dd11dbc5c9855749a123779d
   dependencies:
     - helm-toolkit
+  target_state: uninitialized
