@@ -144,6 +144,11 @@ func (obj *ArmadaManifest) IsReady() bool {
 	return obj.Status.ActualState == StateDeployed
 }
 
+// IsFailedOrError returns true if the manifest's actual state is failed or error
+func (obj *ArmadaManifest) IsFailedOrError() bool {
+	return obj.Status.ActualState == StateFailed || obj.Status.ActualState == StateError
+}
+
 // AsYAML returns the ArmadaChartGroup in Yaml form.
 func (obj *ArmadaManifest) AsYAML() ([]byte, error) {
 	u := obj.FromArmadaManifest()

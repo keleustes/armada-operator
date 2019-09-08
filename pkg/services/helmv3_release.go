@@ -94,3 +94,18 @@ func (release *HelmRelease) IsReady() bool {
 
 	return true
 }
+
+func (release *HelmRelease) IsFailedOrError() bool {
+
+	dep := &KubernetesDependency{}
+
+	// Check that each sub resource is owned by the phase
+	items := release.GetDependentResources()
+	for _, item := range items {
+		if dep.IsUnstructuredFailedOrError(&item) {
+			return true
+		}
+	}
+
+	return false
+}

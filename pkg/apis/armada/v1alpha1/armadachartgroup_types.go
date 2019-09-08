@@ -150,6 +150,11 @@ func (obj *ArmadaChartGroup) IsReady() bool {
 	return obj.Status.ActualState == StateDeployed
 }
 
+// IsFailedOrError returns true if the chartgroup's actual state is failed or error
+func (obj *ArmadaChartGroup) IsFailedOrError() bool {
+	return obj.Status.ActualState == StateFailed || obj.Status.ActualState == StateError
+}
+
 // AsYAML returns the ArmadaChartGroup in Yaml form.
 func (obj *ArmadaChartGroup) AsYAML() ([]byte, error) {
 	u := obj.FromArmadaChartGroup()
@@ -341,6 +346,18 @@ func (obj *ArmadaChartGroups) IsReady() bool {
 	}
 
 	return true
+}
+
+func (obj *ArmadaChartGroups) IsFailedOrError() bool {
+
+	for _, act := range obj.List.Items {
+		if act.IsFailedOrError() {
+			// The ChartGroup is failed so the list is failed
+			return true
+		}
+	}
+
+	return false
 }
 
 // Transform ArmadaChartGroups into string for debug purpose

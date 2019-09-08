@@ -90,6 +90,7 @@ const (
 	ReasonUninstallSuccessful                                  = "UninstallSuccessful"
 	ReasonUpdateSuccessful                                     = "UpdateSuccessful"
 	ReasonUnderlyingResourcesReady                             = "UnderlyingResourcesReady"
+	ReasonUnderlyingResourcesError                             = "UnderlyingResourcesError"
 
 	// Error Condition Reasons
 	ReasonInstallError   HelmResourceConditionReason = "InstallError"

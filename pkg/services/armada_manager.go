@@ -23,6 +23,7 @@ import (
 // and uninstall a list of Armada Charts` .
 type ArmadaChartGroupManager interface {
 	ResourceName() string
+	IsInstalled() bool
 	IsUpdateRequired() bool
 	Sync(context.Context) error
 	InstallResource(context.Context) (*av1.ArmadaCharts, error)
@@ -35,6 +36,7 @@ type ArmadaChartGroupManager interface {
 // and uninstall a list of Armada Charts` .
 type ArmadaManifestManager interface {
 	ResourceName() string
+	IsInstalled() bool
 	IsUpdateRequired() bool
 	Sync(context.Context) error
 	InstallResource(context.Context) (*av1.ArmadaChartGroups, error)

@@ -86,18 +86,37 @@ func (m *chartgroupmanager) Sync(ctx context.Context) error {
 		return errs[0]
 	}
 
-	// TODO(jeb): We should check here the "admin_state" of the ArmadaChartGroup compared
-	// it to the "admin_state" of the ArmadaCharts
 	// TODO(jeb): We should check that the ArmadaChartGroup is still not the "owner" of
 	// chartgroups which are not listed in its Spec anymore. In such as case we should put
 	// the isUpdateRequired to true.
 	m.isUpdateRequired = false
+	m.isInstalled = true
+	if m.status.ActualState != av1.StateDeployed {
+		for _, deployedResource := range m.deployedResource.List.Items {
+			existingRefs := deployedResource.GetOwnerReferences()
+			if len(existingRefs) == 0 {
+				m.isInstalled = false
+			}
+		}
+	}
+
 	return nil
 }
 
-// InstallResource checks that the correspoding charts
+// InstallResource checks that the corresponding charts
+// TODO(jeb): We should most likely update the target_state is not already done.
+// TODO(jeb): We should also update the the owner of the charts.
 func (m chartgroupmanager) InstallResource(ctx context.Context) (*av1.ArmadaCharts, error) {
-	return nil, nil
+	installedResources := av1.NewArmadaCharts(m.resourceName)
+	targetResourceList := m.expectedChartList()
+	for _, existingResource := range targetResourceList.List.Items {
+		err := m.kubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.GetName(), Namespace: existingResource.GetNamespace()}, &existingResource)
+		if err == nil {
+			installedResources.List.Items = append(installedResources.List.Items, existingResource)
+		}
+	}
+
+	return installedResources, nil
 }
 
 // UpdateResource performs an update of an ArmadaChartGroup.

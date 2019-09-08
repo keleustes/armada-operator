@@ -120,11 +120,13 @@ func (r *ChartGroupReconciler) Reconcile(request reconcile.Request) (reconcile.R
 	instance.SetName(request.Name)
 
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+
 	if apierrors.IsNotFound(err) {
 		// We are working asynchronously. By the time we receive the event,
 		// the object is already gone
 		return reconcile.Result{}, nil
 	}
+
 	if err != nil {
 		reclog.Error(err, "Failed to lookup ArmadaChartGroup")
 		return reconcile.Result{}, err
@@ -173,6 +175,13 @@ func (r *ChartGroupReconciler) Reconcile(request reconcile.Request) (reconcile.R
 	instance.Status.SetCondition(hrc, instance.Spec.TargetState)
 
 	switch {
+	case !mgr.IsInstalled():
+		if shouldRequeue, err = r.installArmadaChartGroup(mgr, instance); shouldRequeue {
+			// we updated the ownership of the charts. Let's wake up
+			// one more time later to enable the first chart.
+			return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
+		}
+		return reconcile.Result{}, err
 	case mgr.IsUpdateRequired():
 		if shouldRequeue, err = r.updateArmadaChartGroup(mgr, instance); shouldRequeue {
 			return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
@@ -357,6 +366,9 @@ func (r ChartGroupReconciler) installArmadaChartGroup(mgr armadaif.ArmadaChartGr
 	reclog := acglog.WithValues("namespace", instance.Namespace, "acg", instance.Name)
 	reclog.Info("Updating")
 
+	// The concept of installing a chartgroup is kind of fuzzy since
+	// the mgr can not really create chart. It can only check
+	// that the charts are present before beeing able to proceed.
 	installedResource, err := mgr.InstallResource(context.TODO())
 	if err != nil {
 		instance.Status.RemoveCondition(av1.ConditionRunning)
@@ -462,6 +474,24 @@ func (r ChartGroupReconciler) reconcileArmadaChartGroup(mgr armadaif.ArmadaChart
 
 	if err := r.watchArmadaCharts(instance, reconciledResource); err != nil {
 		reclog.Error(err, "Failed to update watch on dependent resources")
+		return false, err
+	}
+
+	if reconciledResource.IsFailedOrError() {
+		// We reconcile. Everything is ready. The flow is now ok
+		instance.Status.RemoveCondition(av1.ConditionRunning)
+
+		hrc := av1.HelmResourceCondition{
+			Type:         av1.ConditionError,
+			Status:       av1.ConditionStatusTrue,
+			Reason:       av1.ReasonUnderlyingResourcesError,
+			Message:      "",
+			ResourceName: reconciledResource.GetName(),
+		}
+		instance.Status.SetCondition(hrc, instance.Spec.TargetState)
+		r.logAndRecordSuccess(instance, &hrc)
+
+		err = r.updateResourceStatus(instance)
 		return false, err
 	}
 

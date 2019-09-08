@@ -120,6 +120,7 @@ func (r *ManifestReconciler) Reconcile(request reconcile.Request) (reconcile.Res
 	instance.SetName(request.Name)
 
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+
 	if apierrors.IsNotFound(err) {
 		// We are working asynchronously. By the time we receive the event,
 		// the object is already gone
@@ -173,6 +174,11 @@ func (r *ManifestReconciler) Reconcile(request reconcile.Request) (reconcile.Res
 	instance.Status.SetCondition(hrc, instance.Spec.TargetState)
 
 	switch {
+	case !mgr.IsInstalled():
+		if shouldRequeue, err = r.installArmadaManifest(mgr, instance); shouldRequeue {
+			return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
+		}
+		return reconcile.Result{}, err
 	case mgr.IsUpdateRequired():
 		if shouldRequeue, err = r.updateArmadaManifest(mgr, instance); shouldRequeue {
 			return reconcile.Result{RequeueAfter: r.reconcilePeriod}, err
@@ -356,6 +362,9 @@ func (r ManifestReconciler) installArmadaManifest(mgr armadaif.ArmadaManifestMan
 	reclog := amflog.WithValues("namespace", instance.Namespace, "amf", instance.Name)
 	reclog.Info("Updating")
 
+	// The concept of installing a manifest is kind of fuzzy since
+	// the mgr can not really create chartgroup. It can only check
+	// that the chartgroups are present before beeing able to proceed.
 	installedResource, err := mgr.InstallResource(context.TODO())
 	if err != nil {
 		instance.Status.RemoveCondition(av1.ConditionRunning)
@@ -463,6 +472,24 @@ func (r ManifestReconciler) reconcileArmadaManifest(mgr armadaif.ArmadaManifestM
 
 	if err := r.watchArmadaChartGroups(instance, reconciledResource); err != nil {
 		reclog.Error(err, "Failed to update watch on dependent resources")
+		return false, err
+	}
+
+	if reconciledResource.IsFailedOrError() {
+		// We reconcile. Everything is ready. The flow is now ok
+		instance.Status.RemoveCondition(av1.ConditionRunning)
+
+		hrc := av1.HelmResourceCondition{
+			Type:         av1.ConditionError,
+			Status:       av1.ConditionStatusTrue,
+			Reason:       av1.ReasonUnderlyingResourcesError,
+			Message:      "",
+			ResourceName: reconciledResource.GetName(),
+		}
+		instance.Status.SetCondition(hrc, instance.Spec.TargetState)
+		r.logAndRecordSuccess(instance, &hrc)
+
+		err = r.updateResourceStatus(instance)
 		return false, err
 	}
 

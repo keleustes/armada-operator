@@ -185,8 +185,14 @@ func (r *ChartReconciler) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	if err := r.reconcileArmadaChart(mgr, instance); err != nil {
+	forcedRequeue, err := r.reconcileArmadaChart(mgr, instance)
+	if err != nil {
+		// Let's don't force a requeue.
 		return reconcile.Result{}, err
+	}
+	if forcedRequeue {
+		// We have been waked up out of order ?
+		return reconcile.Result{RequeueAfter: r.reconcilePeriod}, nil
 	}
 
 	reclog.Info("Reconciled ArmadaChart")
@@ -419,7 +425,7 @@ func (r ChartReconciler) updateArmadaChart(mgr services.HelmManager, instance *a
 }
 
 // reconcileArmadaChart reconciles the release with the cluster
-func (r ChartReconciler) reconcileArmadaChart(mgr services.HelmManager, instance *av1.ArmadaChart) error {
+func (r ChartReconciler) reconcileArmadaChart(mgr services.HelmManager, instance *av1.ArmadaChart) (bool, error) {
 	reclog := actlog.WithValues("namespace", instance.Namespace, "act", instance.Name)
 	reclog.Info("Reconciling ArmadaChart and HelmRelease")
 
@@ -438,13 +444,31 @@ func (r ChartReconciler) reconcileArmadaChart(mgr services.HelmManager, instance
 		r.logAndRecordFailure(instance, &hrc, err)
 
 		_ = r.updateResourceStatus(instance)
-		return err
+		return false, err
 	}
 	instance.Status.RemoveCondition(av1.ConditionIrreconcilable)
 
 	if err := r.watchDependentResources(reconciledResource); err != nil {
 		reclog.Error(err, "Failed to update watch on dependent resources")
-		return err
+		return false, err
+	}
+
+	if reconciledResource.IsFailedOrError() {
+		// We reconcile. Everything is ready. The flow is now ok
+		instance.Status.RemoveCondition(av1.ConditionRunning)
+
+		hrc := av1.HelmResourceCondition{
+			Type:         av1.ConditionError,
+			Status:       av1.ConditionStatusTrue,
+			Reason:       av1.ReasonUnderlyingResourcesError,
+			Message:      "",
+			ResourceName: reconciledResource.GetName(),
+		}
+		instance.Status.SetCondition(hrc, instance.Spec.TargetState)
+		r.logAndRecordSuccess(instance, &hrc)
+
+		err = r.updateResourceStatus(instance)
+		return false, err
 	}
 
 	if reconciledResource.IsReady() {
@@ -462,8 +486,8 @@ func (r ChartReconciler) reconcileArmadaChart(mgr services.HelmManager, instance
 		r.logAndRecordSuccess(instance, &hrc)
 
 		err = r.updateResourceStatus(instance)
-		return err
+		return false, err
 	}
 
-	return nil
+	return false, nil
 }

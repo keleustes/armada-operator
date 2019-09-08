@@ -233,6 +233,11 @@ func (obj *ArmadaChart) IsReady() bool {
 	return obj.Status.ActualState == StateDeployed
 }
 
+// IsFailedOrError returns true if the chart's actual state is failed or error
+func (obj *ArmadaChart) IsFailedOrError() bool {
+	return obj.Status.ActualState == StateFailed || obj.Status.ActualState == StateError
+}
+
 // AsYAML returns the ArmadaChart in Yaml form.
 func (obj *ArmadaChart) AsYAML() ([]byte, error) {
 	u := obj.FromArmadaChart()
@@ -296,6 +301,7 @@ func (obj *ArmadaChartList) Equivalent(other *ArmadaChartList) bool {
 }
 
 // Let's check the reference are setup properly.
+// k8s controllerutil seems to have much better code.
 func (obj *ArmadaChartList) CheckOwnerReference(refs []metav1.OwnerReference) bool {
 
 	// Check that each sub resource is owned by the phase
@@ -384,6 +390,18 @@ func (obj *ArmadaCharts) IsReady() bool {
 	}
 
 	return true
+}
+
+func (obj *ArmadaCharts) IsFailedOrError() bool {
+
+	for _, act := range obj.List.Items {
+		if act.IsFailedOrError() {
+			// The Chart is failed so the list is failed
+			return true
+		}
+	}
+
+	return false
 }
 
 // Transform ArmadaCharts into string for debug purpose
