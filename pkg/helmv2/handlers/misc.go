@@ -17,7 +17,7 @@
 package handlersv2
 
 import (
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )

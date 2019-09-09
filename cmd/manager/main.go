@@ -7,7 +7,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/keleustes/armada-operator/pkg/apis"
+	"github.com/keleustes/armada-crd/pkg/apis"
 	"github.com/keleustes/armada-operator/pkg/controller"
 	"github.com/keleustes/armada-operator/pkg/k8sutil"
 

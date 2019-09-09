@@ -10,8 +10,6 @@ spec:
   values:
     conf:
       foo: bar
-  install:
-    no_hooks: false
   upgrade:
     no_hooks: false
   source:

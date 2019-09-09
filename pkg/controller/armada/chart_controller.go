@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 	helmmgr "github.com/keleustes/armada-operator/pkg/helm"
 	services "github.com/keleustes/armada-operator/pkg/services"
 

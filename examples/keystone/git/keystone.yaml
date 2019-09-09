@@ -9,8 +9,6 @@ spec:
   chart_name: keystone
   dependencies:
   - helm-toolkit
-  install:
-    no_hooks: false
   release: keystone
   source:
     location: https://opendev.org/openstack/openstack-helm

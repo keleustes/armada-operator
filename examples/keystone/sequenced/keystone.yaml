@@ -13,8 +13,6 @@ spec:
     timeout: 100
     labels:
       release_group: armada-keystone
-  install:
-    no_hooks: false
   upgrade:
     no_hooks: false
     pre:

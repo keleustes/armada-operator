@@ -29,7 +29,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 	helmif "github.com/keleustes/armada-operator/pkg/services"
 
 	yaml "gopkg.in/yaml.v2"

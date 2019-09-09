@@ -37,7 +37,7 @@ import (
 	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	// "gopkg.in/src-d/go-git.v4/storage/memory"
 
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 	"k8s.io/helm/pkg/chartutil"
 	cpb "k8s.io/helm/pkg/proto/hapi/chart"
 )

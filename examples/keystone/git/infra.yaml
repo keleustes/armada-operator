@@ -10,8 +10,6 @@ spec:
   chart_name: mariadb
   dependencies:
   - helm-toolkit
-  install:
-    no_hooks: false
   release: mariadb
   source:
     location: https://opendev.org/openstack/openstack-helm-infra
@@ -94,8 +92,6 @@ spec:
   chart_name: memcached
   dependencies:
   - helm-toolkit
-  install:
-    no_hooks: false
   release: memcached
   source:
     location: https://opendev.org/openstack/openstack-helm-infra
@@ -141,8 +137,6 @@ spec:
   chart_name: rabbitmq
   dependencies:
   - helm-toolkit
-  install:
-    no_hooks: false
   release: rabbitmq
   source:
     location: https://opendev.org/openstack/openstack-helm-infra

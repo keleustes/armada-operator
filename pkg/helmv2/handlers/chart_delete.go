@@ -19,7 +19,7 @@ package handlersv2
 import (
 	"context"
 
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 )
 
 type ChartDelete struct {

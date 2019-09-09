@@ -19,7 +19,7 @@ package handlersv2
 import (
 	"context"
 
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 	helmif "github.com/keleustes/armada-operator/pkg/services"
 	corev1 "k8s.io/api/core/v1"
 

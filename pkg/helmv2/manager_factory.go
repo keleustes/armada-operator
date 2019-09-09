@@ -21,7 +21,7 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 	helmif "github.com/keleustes/armada-operator/pkg/services"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

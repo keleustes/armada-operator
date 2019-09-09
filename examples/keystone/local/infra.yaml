@@ -11,8 +11,6 @@ spec:
     timeout: 3600
     labels:
       release_group: armada-mariadb
-  install:
-    no_hooks: false
   upgrade:
     no_hooks: false
   values: {}
@@ -37,8 +35,6 @@ spec:
     timeout: 100
     labels:
       release_group: armada-memcached
-  install:
-    no_hooks: false
   upgrade:
     no_hooks: false
   values: {}
@@ -65,8 +61,6 @@ spec:
     timeout: 100
     labels:
       release_group: armada-rabbitmq
-  install:
-    no_hooks: false
   upgrade:
     no_hooks: false
   values: {}
