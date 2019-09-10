@@ -22,7 +22,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/jmoiron/sqlx v1.2.0 // indirect
-	github.com/keleustes/armada-crd v0.2.0
+	github.com/keleustes/armada-crd v0.2.1
 	github.com/lib/pq v1.1.1 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect

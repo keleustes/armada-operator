@@ -321,8 +321,8 @@ github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7V
 github.com/kardianos/osext v0.0.0-20150410034420-8fef92e41e22/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=
 github.com/karrick/godirwalk v1.7.5/go.mod h1:2c9FRhkDxdIbgkOnCEvnSWs71Bhugbl46shStcFDJ34=
 github.com/karrick/godirwalk v1.10.12/go.mod h1:RoGL9dQei4vP9ilrpETWE8CLOZ1kiN0LhBygSwrAsHA=
-github.com/keleustes/armada-crd v0.2.0 h1:1CMMVmMijiRkRaCw/yNkvhFDgnpw7Tv/Tv7P+ovmRuk=
-github.com/keleustes/armada-crd v0.2.0/go.mod h1:lQivpwXRwIyhodVQ2wXkbm8LsIY3tpuFssDOVjQk3Kg=
+github.com/keleustes/armada-crd v0.2.1 h1:rV5M7240pwrLdDCYhXxCNO646PFIEiYCFO+LDpzx9lc=
+github.com/keleustes/armada-crd v0.2.1/go.mod h1:lQivpwXRwIyhodVQ2wXkbm8LsIY3tpuFssDOVjQk3Kg=
 github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e h1:RgQk53JHp/Cjunrr1WlsXSZpqXn+uREuHvUVcK82CV8=
 github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
