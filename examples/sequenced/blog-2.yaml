@@ -9,7 +9,8 @@ spec:
   namespace: default
   values:
     conf:
-      foo: bar
+      test:
+        foo: bar
   upgrade:
     no_hooks: false
   source:

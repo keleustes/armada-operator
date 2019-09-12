@@ -68,12 +68,13 @@ vet-v2: fmt
 vet-v3: fmt
 	GO111MODULE=on go vet -composites=false -tags=v3 ./pkg/... ./cmd/...
 
-# Generate code
-generate: setup
-        # git clone sigs.k8s.io/controller-tools
-        # go install ./cmd/...
-	GO111MODULE=on controller-gen crd paths=./pkg/apis/armada/... crd:trivialVersions=true output:crd:dir=./chart/templates/ output:none
-	GO111MODULE=on controller-gen object paths=./pkg/apis/armada/... output:object:dir=./pkg/apis/armada/v1alpha1 output:none
+# Generate code. Moved to armada-crd
+# generate: setup
+#         # git clone sigs.k8s.io/controller-tools
+#         # go install ./cmd/...
+# 	GO111MODULE=on controller-gen crd paths=./pkg/apis/armada/... crd:trivialVersions=true output:crd:dir=./chart/templates/ output:none
+# 	GO111MODULE=on controller-gen object paths=./pkg/apis/armada/... output:object:dir=./pkg/apis/armada/v1alpha1 output:none
+#	cp ../armada-crd/kubectl/*.yaml chart/templates/
 
 # Build the docker image
 docker-build: fmt docker-build-v2
@@ -147,3 +148,27 @@ getcrds:
 
 deploy-patch:
 	kubectl patch act blog-1 --type merge -p $'spec:\n  target_state: deployed'
+
+.PHONY: kubeval-simple
+kubeval-simple:
+	@for f in $(shell ls ./examples/armada/* ./examples/gittest/* ./examples/sequenced/* ./examples/stepbystep/* ./examples/tartest/*); do \
+		kubeval $${f} --schema-location file://$${HOME}/src/github.com/keleustes/armada-crd/kubeval --strict; \
+	done || true
+
+.PHONY: kubeval-argo
+kubeval-argo:
+	@for f in $(shell ls ./examples/argo/* | grep -v group); do \
+		kubeval $${f} --schema-location file://$${HOME}/src/github.com/keleustes/armada-crd/kubeval --strict; \
+	done || true
+
+.PHONY: kubeval-keystone
+kubeval-keystone:
+	@for f in $(shell ls ./examples/keystone/git/* ./examples/keystone/local/* ./examples/keystone/sequenced/*); do \
+		kubeval $${f} --schema-location file://$${HOME}/src/github.com/keleustes/armada-crd/kubeval --strict; \
+	done || true
+	@for f in $(shell ls ./examples/keystone/argo/* | grep -v workflow); do \
+		kubeval $${f} --schema-location file://$${HOME}/src/github.com/keleustes/armada-crd/kubeval --strict; \
+	done || true
+
+.PHONY: kubeval-checks
+kubeval-checks: kubeval-simple kubeval-argo kubeval-keystone

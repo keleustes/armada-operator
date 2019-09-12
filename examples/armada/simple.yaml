@@ -11,8 +11,9 @@ spec:
     no_hooks: false
   values:
     conf:
-       foo1: bar1
-       foo2: bar2
+      test:
+        foo1: bar1
+        foo2: bar2
   source:
     type: local
     location: /opt/armada/helm-charts/testchart

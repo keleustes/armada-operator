@@ -149,7 +149,8 @@ spec:
           internal: http
       oslo_cache:
         auth:
-          memcache_secret_key: airsloop123
+          tojeb:
+            memcache_secret_key: airsloop123
         host_fqdn_override:
           default: ""
         hosts:

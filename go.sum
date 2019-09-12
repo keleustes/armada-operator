@@ -325,6 +325,8 @@ github.com/keleustes/armada-crd v0.2.2 h1:St/FHY2uX5YEve4sTVR6DrJUx3111MBiwjZpB4
 github.com/keleustes/armada-crd v0.2.2/go.mod h1:lQivpwXRwIyhodVQ2wXkbm8LsIY3tpuFssDOVjQk3Kg=
 github.com/keleustes/armada-crd v0.2.3 h1:oufN0GqNqoeL4Bdc47kA4i08WuiduwOi6VNZZkQ9aQ0=
 github.com/keleustes/armada-crd v0.2.3/go.mod h1:lQivpwXRwIyhodVQ2wXkbm8LsIY3tpuFssDOVjQk3Kg=
+github.com/keleustes/armada-crd v0.2.6 h1:5RrLN6W1+4pqE05VEbLIWJzadio8ByH2A9zXDvXLlpw=
+github.com/keleustes/armada-crd v0.2.6/go.mod h1:lQivpwXRwIyhodVQ2wXkbm8LsIY3tpuFssDOVjQk3Kg=
 github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e h1:RgQk53JHp/Cjunrr1WlsXSZpqXn+uREuHvUVcK82CV8=
 github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
