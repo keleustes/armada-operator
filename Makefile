@@ -1,7 +1,7 @@
 
 # Image URL to use all building/pushing image targets
 COMPONENT        ?= armada-operator
-VERSION_V2       ?= 2.14.3
+VERSION_V2       ?= 2.15.0
 VERSION_V3       ?= 3.0.0
 DHUBREPO         ?= keleustes/${COMPONENT}-dev
 DOCKER_NAMESPACE ?= keleustes
