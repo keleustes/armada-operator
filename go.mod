@@ -18,7 +18,7 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
 	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/jmoiron/sqlx v1.2.0 // indirect
-	github.com/keleustes/armada-crd v0.2.8-0.20190925064720-0214fe62ad91
+	github.com/keleustes/armada-crd v0.2.9
 	github.com/lib/pq v1.1.1 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/onsi/gomega v1.7.0
