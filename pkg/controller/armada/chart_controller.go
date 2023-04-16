@@ -300,7 +300,7 @@ func (r ChartReconciler) deleteArmadaChart(mgr services.HelmManager, instance *a
 			Status:       av1.ConditionStatusTrue,
 			Reason:       av1.ReasonUninstallError,
 			Message:      err.Error(),
-			ResourceName: uninstalledResource.GetName(),
+			ResourceName: uninstalledResource.Name,
 		}
 		instance.Status.SetCondition(hrc, instance.Spec.TargetState)
 		r.logAndRecordFailure(instance, &hrc, err)
@@ -370,8 +370,8 @@ func (r ChartReconciler) installArmadaChart(mgr services.HelmManager, instance *
 		Status:          av1.ConditionStatusTrue,
 		Reason:          av1.ReasonInstallSuccessful,
 		Message:         installedResource.GetNotes(),
-		ResourceName:    installedResource.GetName(),
-		ResourceVersion: installedResource.GetVersion(),
+		ResourceName:    installedResource.Name,
+		ResourceVersion: int32(installedResource.Version),
 	}
 	instance.Status.SetCondition(hrc, instance.Spec.TargetState)
 	r.logAndRecordSuccess(instance, &hrc)
@@ -394,7 +394,7 @@ func (r ChartReconciler) updateArmadaChart(mgr services.HelmManager, instance *a
 			Status:       av1.ConditionStatusTrue,
 			Reason:       av1.ReasonUpdateError,
 			Message:      err.Error(),
-			ResourceName: updatedResource.GetName(),
+			ResourceName: updatedResource.Name,
 		}
 		instance.Status.SetCondition(hrc, instance.Spec.TargetState)
 		r.logAndRecordFailure(instance, &hrc, err)
@@ -414,8 +414,8 @@ func (r ChartReconciler) updateArmadaChart(mgr services.HelmManager, instance *a
 		Status:          av1.ConditionStatusTrue,
 		Reason:          av1.ReasonUpdateSuccessful,
 		Message:         updatedResource.GetNotes(),
-		ResourceName:    updatedResource.GetName(),
-		ResourceVersion: updatedResource.GetVersion(),
+		ResourceName:    updatedResource.Name,
+		ResourceVersion: int32(updatedResource.Version),
 	}
 	instance.Status.SetCondition(hrc, instance.Spec.TargetState)
 	r.logAndRecordSuccess(instance, &hrc)
@@ -438,7 +438,7 @@ func (r ChartReconciler) reconcileArmadaChart(mgr services.HelmManager, instance
 			Status:       av1.ConditionStatusTrue,
 			Reason:       av1.ReasonReconcileError,
 			Message:      err.Error(),
-			ResourceName: reconciledResource.GetName(),
+			ResourceName: reconciledResource.Name,
 		}
 		instance.Status.SetCondition(hrc, instance.Spec.TargetState)
 		r.logAndRecordFailure(instance, &hrc, err)
@@ -462,7 +462,7 @@ func (r ChartReconciler) reconcileArmadaChart(mgr services.HelmManager, instance
 			Status:       av1.ConditionStatusTrue,
 			Reason:       av1.ReasonUnderlyingResourcesError,
 			Message:      "",
-			ResourceName: reconciledResource.GetName(),
+			ResourceName: reconciledResource.Name,
 		}
 		instance.Status.SetCondition(hrc, instance.Spec.TargetState)
 		r.logAndRecordSuccess(instance, &hrc)
@@ -480,7 +480,7 @@ func (r ChartReconciler) reconcileArmadaChart(mgr services.HelmManager, instance
 			Status:       av1.ConditionStatusTrue,
 			Reason:       av1.ReasonUnderlyingResourcesReady,
 			Message:      "",
-			ResourceName: reconciledResource.GetName(),
+			ResourceName: reconciledResource.Name,
 		}
 		instance.Status.SetCondition(hrc, instance.Spec.TargetState)
 		r.logAndRecordSuccess(instance, &hrc)

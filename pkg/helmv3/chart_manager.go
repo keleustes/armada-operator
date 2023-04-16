@@ -107,7 +107,7 @@ func (m *chartmanager) Sync(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to get deployed release: %s", err)
 	}
-	m.deployedRelease = &helmif.HelmRelease{deployedRelease}
+	m.deployedRelease = &helmif.HelmRelease{Release: deployedRelease}
 	m.isInstalled = true
 
 	// Get the next candidate release to determine if an update is necessary.
@@ -194,14 +194,14 @@ func (m chartmanager) getCandidateRelease(ctx context.Context, renderder interfa
 func (m chartmanager) InstallRelease(ctx context.Context) (*helmif.HelmRelease, error) {
 	// installedRelease, err := installRelease(ctx, m.renderer, m.namespace, m.releaseName, m.chart, m.config)
 	var installedRelease = &rpb.Release{}
-	return &helmif.HelmRelease{installedRelease}, nil
+	return &helmif.HelmRelease{Release: installedRelease}, nil
 }
 
 // UpdateRelease performs a Helm release update.
 func (m chartmanager) UpdateRelease(ctx context.Context) (*helmif.HelmRelease, *helmif.HelmRelease, error) {
 	// updatedRelease, err := updateRelease(ctx, m.renderer, m.releaseName, m.chart, m.config)
 	var updatedRelease = &rpb.Release{}
-	return m.deployedRelease, &helmif.HelmRelease{updatedRelease}, nil
+	return m.deployedRelease, &helmif.HelmRelease{Release: updatedRelease}, nil
 }
 
 // ReconcileRelease creates or patches resources as necessary to match the
@@ -215,7 +215,7 @@ func (m chartmanager) ReconcileRelease(ctx context.Context) (*helmif.HelmRelease
 func (m chartmanager) UninstallRelease(ctx context.Context) (*helmif.HelmRelease, error) {
 	// uninstalledRelease, err := uninstallRelease(ctx, m.storageBackend, m.renderer, m.releaseName)
 	var uninstalledRelease = &rpb.Release{}
-	return &helmif.HelmRelease{uninstalledRelease}, nil
+	return &helmif.HelmRelease{Release: uninstalledRelease}, nil
 }
 
 func (m chartmanager) getChart() (*cpb.Chart, error) {

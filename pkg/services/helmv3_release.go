@@ -32,7 +32,8 @@ type HelmRelease struct {
 }
 
 func (r *HelmRelease) GetNotes() string {
-	return r.GetInfo().GetStatus().GetNotes()
+	// return r.InfoGetStatus().GetNotes()
+	return ""
 }
 
 // Let's cache the actual objects
@@ -49,7 +50,8 @@ func (release *HelmRelease) GetDependentResources() []unstructured.Unstructured 
 	}
 
 	deps := make([]unstructured.Unstructured, 0)
-	dec := yaml.NewDecoder(bytes.NewBufferString(release.GetManifest()))
+	// BUG dec := yaml.NewDecoder(bytes.NewBufferString(release.GetManifest()))
+	dec := yaml.NewDecoder(bytes.NewBufferString(""))
 	for {
 		var u unstructured.Unstructured
 		err := dec.Decode(&u.Object)
