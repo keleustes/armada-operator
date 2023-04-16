@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build ignore
-// +build v3
-
 package services
 
 import (
@@ -26,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	yaml "gopkg.in/yaml.v2"
-	rpb "k8s.io/helm/helm/pkg/release"
+	rpb "helm.sh/helm/v3/pkg/release"
 )
 
 type HelmRelease struct {

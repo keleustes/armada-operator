@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build ignore
-// +build v3
-
 package helmv3
 
 import (
@@ -34,10 +31,10 @@ import (
 	helmif "github.com/keleustes/armada-operator/pkg/services"
 
 	yaml "gopkg.in/yaml.v2"
-	"k8s.io/helm/helm/pkg/kube"
-	"k8s.io/helm/helm/pkg/storage"
-	cpb "k8s.io/helm/helm/pkg/chart"
-	rpb "k8s.io/helm/helm/pkg/release"
+	"helm.sh/helm/v3/pkg/kube"
+	"helm.sh/helm/v3/pkg/storage"
+	cpb "helm.sh/helm/v3/pkg/chart"
+	rpb "helm.sh/helm/v3/pkg/release"
 )
 
 type chartmanager struct {

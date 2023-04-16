@@ -49,7 +49,7 @@ delete-testcluster:
 
 
 # Run tests
-unittest: setup fmt vet-v2
+unittest: setup fmt vet
 	echo "sudo systemctl stop kubelet"
 	echo -e 'docker stop $$(docker ps -qa)'
 	echo -e 'export PATH=$${PATH}:/usr/local/kubebuilder/bin'
@@ -62,11 +62,8 @@ fmt: setup
 	GO111MODULE=on go fmt ./pkg/... ./cmd/...
 
 # Run go vet against code
-vet-v2: fmt
-	GO111MODULE=on go vet -composites=false -tags=v2 ./pkg/... ./cmd/...
-
-vet-v3: fmt
-	GO111MODULE=on go vet -composites=false -tags=v3 ./pkg/... ./cmd/...
+vet: fmt
+	GO111MODULE=on go vet -composites=false ./pkg/... ./cmd/...
 
 # Generate code. Moved to armada-crd
 # generate: setup
@@ -80,12 +77,12 @@ vet-v3: fmt
 docker-build: fmt docker-build-v2
 
 docker-build-v2:
-	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v2 ./cmd/...
+	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/...
 	docker build . -f build/Dockerfile -t ${IMG_V2}
 	docker tag ${IMG_V2} ${DHUBREPO}:latest
 
 docker-build-v3: vet-v3
-	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -tags=v3 ./cmd/...
+	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/...
 	docker build . -f build/Dockerfile -t ${IMG_V3}
 	docker tag ${IMG_V3} ${DHUBREPO}:latest
 
