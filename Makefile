@@ -11,9 +11,10 @@ IMG_V3           ?= ${DHUBREPO}:v${VERSION_V3}
 all: docker-build
 
 setup:
-ifndef GOPATH
-	$(error GOPATH not defined, please define GOPATH. Run "go help gopath" to learn more about GOPATH)
-endif
+	echo $(GOPATH)
+# ifndef GOPATH
+#	$(error GOPATH not defined, please define GOPATH. Run "go help gopath" to learn more about GOPATH)
+#endif
 
 .PHONY: clean
 clean:
@@ -27,13 +28,13 @@ install-tools:
 	cd /tmp && GO111MODULE=on go get sigs.k8s.io/kind@v0.5.0
 	cd /tmp && GO111MODULE=on go get github.com/instrumenta/kubeval@0.13.0
 
-clusterexist=$(shell kind get clusters | grep armada  | wc -l)
-ifeq ($(clusterexist), 1)
-  testcluster=$(shell kind get kubeconfig-path --name="armada")
-  SETKUBECONFIG=KUBECONFIG=$(testcluster)
-else
-  SETKUBECONFIG=
-endif
+# clusterexist=$(shell kind get clusters | grep armada  | wc -l)
+# ifeq ($(clusterexist), 1)
+#   testcluster=$(shell kind get kubeconfig-path --name="armada")
+#   SETKUBECONFIG=KUBECONFIG=$(testcluster)
+# else
+#   SETKUBECONFIG=
+# endif
 
 .PHONY: which-cluster
 which-cluster:

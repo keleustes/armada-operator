@@ -31,16 +31,16 @@ import (
 	helmif "github.com/keleustes/armada-operator/pkg/services"
 
 	yaml "gopkg.in/yaml.v2"
-	"helm.sh/helm/v3/pkg/kube"
-	"helm.sh/helm/v3/pkg/storage"
 	cpb "helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/kube"
 	rpb "helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/storage"
 )
 
 type chartmanager struct {
-	storageBackend   *storage.Storage
-	helmKubeClient   *kube.Client
-	chartLocation    *av1.ArmadaChartSource
+	storageBackend *storage.Storage
+	helmKubeClient *kube.Client
+	chartLocation  *av1.ArmadaChartSource
 
 	renderer    interface{}
 	releaseName string
@@ -233,9 +233,9 @@ func (m chartmanager) getChart() (*cpb.Chart, error) {
 	if err != nil {
 		return nil, err
 	}
-        if pathToChart == "" {
+	if pathToChart == "" {
 		return nil, nil
-        }
+	}
 
 	return nil, nil
 }

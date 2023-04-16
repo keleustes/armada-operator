@@ -1,6 +1,6 @@
 module github.com/keleustes/armada-operator
 
-go 1.18
+go 1.20
 
 require (
 	github.com/keleustes/armada-crd v1.27.1-keleustes.20230416
@@ -12,6 +12,12 @@ require (
 	k8s.io/apimachinery v0.27.1
 	k8s.io/client-go v0.27.1
 	sigs.k8s.io/controller-runtime v0.14.6
+)
+
+replace (
+	k8s.io/api => k8s.io/api v0.26.3
+	k8s.io/apimachinery => k8s.io/apimachinery v0.26.3
+	k8s.io/client-go => k8s.io/client-go v0.26.3
 )
 
 require (
