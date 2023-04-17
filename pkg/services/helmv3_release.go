@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build v3
-
 package services
 
 import (
@@ -25,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	yaml "gopkg.in/yaml.v2"
-	rpb "helm.sh/helm/pkg/release"
+	rpb "helm.sh/helm/v3/pkg/release"
 )
 
 type HelmRelease struct {
@@ -34,7 +32,8 @@ type HelmRelease struct {
 }
 
 func (r *HelmRelease) GetNotes() string {
-	return r.GetInfo().GetStatus().GetNotes()
+	// return r.InfoGetStatus().GetNotes()
+	return ""
 }
 
 // Let's cache the actual objects
@@ -51,7 +50,8 @@ func (release *HelmRelease) GetDependentResources() []unstructured.Unstructured 
 	}
 
 	deps := make([]unstructured.Unstructured, 0)
-	dec := yaml.NewDecoder(bytes.NewBufferString(release.GetManifest()))
+	// BUG dec := yaml.NewDecoder(bytes.NewBufferString(release.GetManifest()))
+	dec := yaml.NewDecoder(bytes.NewBufferString(""))
 	for {
 		var u unstructured.Unstructured
 		err := dec.Decode(&u.Object)
@@ -93,4 +93,19 @@ func (release *HelmRelease) IsReady() bool {
 	}
 
 	return true
+}
+
+func (release *HelmRelease) IsFailedOrError() bool {
+
+	dep := &KubernetesDependency{}
+
+	// Check that each sub resource is owned by the phase
+	items := release.GetDependentResources()
+	for _, item := range items {
+		if dep.IsUnstructuredFailedOrError(&item) {
+			return true
+		}
+	}
+
+	return false
 }

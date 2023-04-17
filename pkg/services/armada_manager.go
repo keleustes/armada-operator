@@ -16,15 +16,17 @@ package services
 
 import (
 	"context"
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 )
 
 // ArmdaChartGroupManager manages a Armada Chart Group. It can install, update, reconcile,
 // and uninstall a list of Armada Charts` .
 type ArmadaChartGroupManager interface {
 	ResourceName() string
+	IsInstalled() bool
 	IsUpdateRequired() bool
 	Sync(context.Context) error
+	InstallResource(context.Context) (*av1.ArmadaCharts, error)
 	UpdateResource(context.Context) (*av1.ArmadaCharts, *av1.ArmadaCharts, error)
 	ReconcileResource(context.Context) (*av1.ArmadaCharts, error)
 	UninstallResource(context.Context) (*av1.ArmadaCharts, error)
@@ -34,8 +36,10 @@ type ArmadaChartGroupManager interface {
 // and uninstall a list of Armada Charts` .
 type ArmadaManifestManager interface {
 	ResourceName() string
+	IsInstalled() bool
 	IsUpdateRequired() bool
 	Sync(context.Context) error
+	InstallResource(context.Context) (*av1.ArmadaChartGroups, error)
 	UpdateResource(context.Context) (*av1.ArmadaChartGroups, *av1.ArmadaChartGroups, error)
 	ReconcileResource(context.Context) (*av1.ArmadaChartGroups, error)
 	UninstallResource(context.Context) (*av1.ArmadaChartGroups, error)

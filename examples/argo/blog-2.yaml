@@ -9,9 +9,8 @@ spec:
   namespace: default
   values:
     conf:
-       foo: bar
-  install:
-    no_hooks: false
+      test:
+        foo: bar
   upgrade:
     no_hooks: false
   source:
@@ -20,3 +19,4 @@ spec:
     subpath: .
     reference: master
   dependencies: []
+  target_state: uninitialized

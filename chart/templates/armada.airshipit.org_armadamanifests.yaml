@@ -1,9 +1,9 @@
+
+---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  labels:
-    controller-tools.k8s.io: "1.0"
   name: armadamanifests.armada.airshipit.org
 spec:
   additionalPrinterColumns:
@@ -22,14 +22,17 @@ spec:
   group: armada.airshipit.org
   names:
     kind: ArmadaManifest
+    listKind: ArmadaManifestList
     plural: armadamanifests
     shortNames:
     - amf
+    singular: armadamanifest
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
+      description: ArmadaManifest is the Schema for the armadamanifests API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -44,7 +47,18 @@ spec:
         metadata:
           type: object
         spec:
+          description: ======= ArmadaManifestSpec Definition ======= ArmadaManifestSpec
+            defines the desired state of ArmadaManifest
           properties:
+            chart_groups:
+              description: References ChartGroup document of all groups
+              items:
+                type: string
+              type: array
+            release_prefix:
+              description: Appends to the front of all charts released by the manifest
+                in order to manage releases throughout their lifecycle
+              type: string
             revisionHistoryLimit:
               description: revisionHistoryLimit is the maximum number of revisions
                 that will be maintained in the ArmadaManifest's revision history.
@@ -52,13 +66,31 @@ spec:
                 a currently applied ArmadaManifest version. The default value is 10.
               format: int32
               type: integer
+            target_state:
+              description: Target state of the Helm Custom Resources
+              type: string
+          required:
+          - chart_groups
+          - release_prefix
+          - target_state
           type: object
         status:
+          description: ======= ArmadaManifestStatus Definition ======= ArmadaManifestStatus
+            defines the observed state of ArmadaManifest
           properties:
+            actual_state:
+              description: Actual state of the Helm Custom Resources
+              type: string
             conditions:
               description: 'List of conditions and states related to the resource.
                 JEB: Feature kind of overlap with event recorder'
               items:
+                description: HelmResourceCondition represents one current condition
+                  of an Helm resource A condition might not show up if it is not happening.
+                  For example, if a chart is not deploying, the Deploying condition
+                  would not show up. If a chart is deploying and encountered a problem
+                  that prevents the deployment, the Deploying condition's status will
+                  would be False and communicate the problem back.
                 properties:
                   lastTransitionTime:
                     format: date-time
@@ -73,12 +105,14 @@ spec:
                     format: int32
                     type: integer
                   status:
+                    description: HelmResourceConditionStatus represents the current
+                      status of a Condition
                     type: string
                   type:
                     type: string
                 required:
-                - type
                 - status
+                - type
                 type: object
               type: array
             reason:
@@ -89,9 +123,15 @@ spec:
                 its target state
               type: boolean
           required:
+          - actual_state
           - satisfied
           type: object
+      type: object
   version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
 status:
   acceptedNames:
     kind: ""

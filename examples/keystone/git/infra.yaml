@@ -2,19 +2,21 @@
 apiVersion: armada.airshipit.org/v1alpha1
 kind: ArmadaChart
 metadata:
+  labels:
+    component: mariadb
+    name: mariadb
   name: mariadb
 spec:
   chart_name: mariadb
   dependencies:
   - helm-toolkit
-  install:
-    no_hooks: false
   release: mariadb
   source:
     location: https://opendev.org/openstack/openstack-helm-infra
-    reference: 5e1ecd9840397bf9e8829ce0d98fcb721db1b74e
+    reference: f0306ce33de4821689b38893d03aabf30f5f6092
     subpath: mariadb
     type: git
+  target_state: deployed
   upgrade:
     no_hooks: false
     pre:
@@ -29,6 +31,8 @@ spec:
           admin:
             password: airsloop123
             username: root
+          exporter:
+            password: airsloop123
         host_fqdn_override:
           default: ""
         hosts:
@@ -41,51 +45,60 @@ spec:
           wsrep:
             default: 4567
         scheme: mysql+pymysql
+      prometheus_mysql_exporter:
+        auth:
+          user:
+            username: osh-oslodb-exporter
+        host_fqdn_override:
+          default: ""
+        hosts:
+          default: mysql-exporter
+        path:
+          default: /metrics
+        port:
+          metrics:
+            default: 9104
+        scheme:
+          default: http
     images:
       tags: {}
     labels:
-      error_server:
-        node_selector_key: control-plane
-        node_selector_value: enabled
-      ingress:
-        node_selector_key: control-plane
-        node_selector_value: enabled
       prometheus_mysql_exporter:
         node_selector_key: control-plane
         node_selector_value: enabled
       server:
         node_selector_key: control-plane
         node_selector_value: enabled
+    monitoring:
+      prometheus:
+        enabled: true
     pod:
       replicas:
         ingress: 1
         server: 1
-    volume:
-      enabled: false
-      backup:
-        enabled: false
-
   wait:
     labels:
       release_group: mariadb
-    timeout: 300
+    timeout: 900
 ---
 apiVersion: armada.airshipit.org/v1alpha1
 kind: ArmadaChart
 metadata:
+  labels:
+    component: memcached
+    name: memcached
   name: memcached
 spec:
   chart_name: memcached
   dependencies:
   - helm-toolkit
-  install:
-    no_hooks: false
   release: memcached
   source:
     location: https://opendev.org/openstack/openstack-helm-infra
-    reference: 5e1ecd9840397bf9e8829ce0d98fcb721db1b74e
+    reference: f0306ce33de4821689b38893d03aabf30f5f6092
     subpath: memcached
     type: git
+  target_state: deployed
   upgrade:
     no_hooks: false
     pre:
@@ -112,24 +125,25 @@ spec:
   wait:
     labels:
       release_group: memcached
-    timeout: 600
+    timeout: 900
 ---
 apiVersion: armada.airshipit.org/v1alpha1
 kind: ArmadaChart
 metadata:
+  labels:
+    name: rabbitmq
   name: rabbitmq
 spec:
   chart_name: rabbitmq
   dependencies:
   - helm-toolkit
-  install:
-    no_hooks: false
   release: rabbitmq
   source:
     location: https://opendev.org/openstack/openstack-helm-infra
-    reference: 5e1ecd9840397bf9e8829ce0d98fcb721db1b74e
+    reference: f0306ce33de4821689b38893d03aabf30f5f6092
     subpath: rabbitmq
     type: git
+  target_state: deployed
   upgrade:
     no_hooks: false
     pre:
@@ -142,18 +156,33 @@ spec:
       oslo_messaging:
         auth:
           user:
-            password: airsloop123
-            username: rabbitmq
+            password: password123
+            username: admin
         host_fqdn_override:
           default: ""
         hosts:
           default: rabbitmq
-        namespace: null
-        path: /keystone
+        path: /VHOST_NAME
         port:
           amqp:
             default: 5672
+          http:
+            default: 15672
         scheme: rabbit
+        statefulset:
+          name: rabbitmq-rabbitmq
+      prometheus_rabbitmq_exporter:
+        host_fqdn_override:
+          default: ""
+        hosts:
+          default: rabbitmq-exporter
+        path:
+          default: /metrics
+        port:
+          metrics:
+            default: 9095
+        scheme:
+          default: http
     images:
       tags: {}
     labels:
@@ -163,14 +192,15 @@ spec:
       server:
         node_selector_key: control-plane
         node_selector_value: enabled
+    monitoring:
+      prometheus:
+        enabled: true
     pod:
       replicas:
         server: 1
-    volume:
-      enabled: false
   wait:
     labels:
       release_group: rabbitmq
     resources:
     - type: statefulset
-    timeout: 300
+    timeout: 900

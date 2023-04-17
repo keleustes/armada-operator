@@ -26,8 +26,8 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	crtpredicate "sigs.k8s.io/controller-runtime/pkg/predicate"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 var phaselog = logf.Log.WithName("base-controller")
@@ -89,9 +89,11 @@ func (r *BaseReconciler) BuildDependentPredicate() *crtpredicate.Funcs {
 
 			// Filter on Status change
 			dep := &services.KubernetesDependency{}
-			if dep.UnstructuredStatusChanged(u, v) {
+			changed, oldv, newv := dep.UnstructuredStatusChanged(u, v)
+			if changed {
 				log.Info("UpdateEvent. Status changed", "resource", u.GetName(), "namespace", u.GetNamespace(),
-					"apiVersion", u.GroupVersionKind().GroupVersion(), "kind", u.GroupVersionKind().Kind)
+					"apiVersion", u.GroupVersionKind().GroupVersion(), "kind", u.GroupVersionKind().Kind,
+					"old", oldv, "new", newv)
 				return true
 			}
 

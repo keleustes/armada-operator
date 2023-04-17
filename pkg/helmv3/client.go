@@ -12,19 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build v3
-
 package helmv3
 
 import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/discovery/cached"
+	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"helm.sh/helm/pkg/kube"
+	"helm.sh/helm/v3/pkg/kube"
 )
 
 // NewFromManager returns a Kubernetes client that can be used with
@@ -65,7 +63,7 @@ func newClientGetter(mgr manager.Manager) (*clientGetter, error) {
 	if err != nil {
 		return nil, err
 	}
-	cdc := cached.NewMemCacheClient(dc)
+	cdc := memory.NewMemCacheClient(dc)
 	rm := mgr.GetRESTMapper()
 
 	return &clientGetter{

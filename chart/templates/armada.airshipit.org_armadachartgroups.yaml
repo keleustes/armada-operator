@@ -1,9 +1,9 @@
+
+---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  labels:
-    controller-tools.k8s.io: "1.0"
   name: armadachartgroups.armada.airshipit.org
 spec:
   additionalPrinterColumns:
@@ -22,14 +22,17 @@ spec:
   group: armada.airshipit.org
   names:
     kind: ArmadaChartGroup
+    listKind: ArmadaChartGroupList
     plural: armadachartgroups
     shortNames:
     - acg
+    singular: armadachartgroup
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
+      description: ArmadaChartGroup is the Schema for the armadachartgroups API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -44,7 +47,14 @@ spec:
         metadata:
           type: object
         spec:
+          description: ======= ArmadaChartGroupSpec Definition ======= ArmadaChartGroupSpec
+            defines the desired state of ArmadaChartGroup
           properties:
+            chart_group:
+              description: reference to chart document
+              items:
+                type: string
+              type: array
             description:
               description: description of chart set
               type: string
@@ -62,13 +72,33 @@ spec:
             sequenced:
               description: enables sequenced chart deployment in a group
               type: boolean
+            target_state:
+              description: Target state of the Helm Custom Resources
+              type: string
+            test_charts:
+              description: run pre-defined helm tests in a ChartGroup (DEPRECATED)
+              type: boolean
+          required:
+          - chart_group
+          - target_state
           type: object
         status:
+          description: ======= ArmadaChartGroupStatus Definition ======= ArmadaChartGroupStatus
+            defines the observed state of ArmadaChartGroup
           properties:
+            actual_state:
+              description: Actual state of the Helm Custom Resources
+              type: string
             conditions:
               description: 'List of conditions and states related to the resource.
                 JEB: Feature kind of overlap with event recorder'
               items:
+                description: HelmResourceCondition represents one current condition
+                  of an Helm resource A condition might not show up if it is not happening.
+                  For example, if a chart is not deploying, the Deploying condition
+                  would not show up. If a chart is deploying and encountered a problem
+                  that prevents the deployment, the Deploying condition's status will
+                  would be False and communicate the problem back.
                 properties:
                   lastTransitionTime:
                     format: date-time
@@ -83,12 +113,14 @@ spec:
                     format: int32
                     type: integer
                   status:
+                    description: HelmResourceConditionStatus represents the current
+                      status of a Condition
                     type: string
                   type:
                     type: string
                 required:
-                - type
                 - status
+                - type
                 type: object
               type: array
             reason:
@@ -99,9 +131,15 @@ spec:
                 its target state
               type: boolean
           required:
+          - actual_state
           - satisfied
           type: object
+      type: object
   version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
 status:
   acceptedNames:
     kind: ""

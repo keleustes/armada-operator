@@ -21,7 +21,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/keleustes/armada-operator/pkg/apis"
+	"github.com/keleustes/armada-crd/pkg/apis"
 	"github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"

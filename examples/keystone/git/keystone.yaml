@@ -9,14 +9,13 @@ spec:
   chart_name: keystone
   dependencies:
   - helm-toolkit
-  install:
-    no_hooks: false
   release: keystone
   source:
     location: https://opendev.org/openstack/openstack-helm
-    reference: 66ba0be81c66c20b5ffae709358970d5937a0202
+    reference: bca8e352b750d5d61ebab6735307fe856171e4ee
     subpath: keystone
     type: git
+  target_state: deployed
   upgrade:
     no_hooks: false
     post:
@@ -27,6 +26,105 @@ spec:
           release_group: keystone
         type: job
   values:
+    bootstrap:
+      script: |
+        openstack role create --or-show _member_
+        openstack role add \
+              --user="${OS_USERNAME}" \
+              --user-domain="${OS_USER_DOMAIN_NAME}" \
+              --project-domain="${OS_PROJECT_DOMAIN_NAME}" \
+              --project="${OS_PROJECT_NAME}" \
+              "_member_"
+
+        #NOTE(portdirect): required for all users who operate heat stacks
+        openstack role create --or-show heat_stack_owner
+        openstack role add \
+              --user="${OS_USERNAME}" \
+              --user-domain="${OS_USER_DOMAIN_NAME}" \
+              --project-domain="${OS_PROJECT_DOMAIN_NAME}" \
+              --project="${OS_PROJECT_NAME}" \
+              "heat_stack_owner"
+    conf:
+      keystone:
+        DEFAULT:
+          transport_url: localhost
+        identity:
+          default_domain_id: default
+          domain_config_dir: /etc/keystonedomains
+          domain_configurations_from_database: true
+          domain_specific_drivers_enabled: true
+          driver: sql
+      logging:
+        formatter_context:
+          class: oslo_log.formatters.ContextFormatter
+        formatter_default:
+          format: '%(message)s'
+        formatter_fluent:
+          class: oslo_log.formatters.FluentFormatter
+        formatters:
+          keys:
+          - context
+          - default
+          - fluent
+        handler_fluent:
+          args: ('openstack.keystone', 'fluentd-logging.osh-infra', 24224)
+          class: fluent.handler.FluentHandler
+          formatter: fluent
+        handler_null:
+          args: ()
+          class: logging.NullHandler
+          formatter: default
+        handler_stderr:
+          args: (sys.stderr,)
+          class: StreamHandler
+          formatter: context
+        handler_stdout:
+          args: (sys.stdout,)
+          class: StreamHandler
+          formatter: context
+        handlers:
+          keys:
+          - stdout
+          - stderr
+          - "null"
+          - fluent
+        logger_boto:
+          handlers: stderr
+          level: WARNING
+          qualname: boto
+        logger_eventletwsgi:
+          handlers: stderr
+          level: WARNING
+          qualname: eventlet.wsgi.server
+        logger_keystone:
+          handlers:
+          - stdout
+          - fluent
+          level: INFO
+          qualname: keystone
+        logger_root:
+          handlers: stdout
+          level: WARNING
+        logger_sqlalchemy:
+          handlers: stderr
+          level: WARNING
+          qualname: sqlalchemy
+        loggers:
+          keys:
+          - root
+          - keystone
+    dependencies:
+      static:
+        api:
+          jobs:
+          - keystone-db-sync
+          - keystone-credential-setup
+          - keystone-fernet-setup
+        db_sync:
+          jobs:
+          - keystone-db-init
+          - keystone-credential-setup
+          - keystone-fernet-setup
     endpoints:
       identity:
         auth:
@@ -34,7 +132,7 @@ spec:
             password: airsloop123
             project_domain_name: default
             project_name: admin
-            region_name: RegionOne
+            region_name: airsloop
             user_domain_name: default
             username: admin
         host_fqdn_override:
@@ -50,6 +148,9 @@ spec:
           default: http
           internal: http
       oslo_cache:
+        auth:
+          tojeb:
+            memcache_secret_key: airsloop123
         host_fqdn_override:
           default: ""
         hosts:
@@ -80,33 +181,40 @@ spec:
       oslo_messaging:
         auth:
           admin:
-            password: airsloop123
-            username: rabbitmq
+            password: password123
+            username: admin
           keystone:
-            password: airsloop123
-            username: keystone
+            password: password123
+            username: keystone-rabbitmq-user
         host_fqdn_override:
           default: ""
         hosts:
-          default: rabbitmq
-        path: /keystone
+          default: openstack-rabbitmq
+        path: /VHOST_NAME
         port:
           amqp:
             default: 5672
+          http:
+            default: 15672
         scheme: rabbit
+        statefulset:
+          name: openstack-rabbitmq-rabbitmq
     images:
       tags: {}
     labels:
       api:
-        node_selector_key: control-plane
+        node_selector_key: openstack-control-plane
         node_selector_value: enabled
       job:
-        node_selector_key: control-plane
+        node_selector_key: openstack-control-plane
         node_selector_value: enabled
+    manifests:
+      job_rabbit_init: false
+      secret_rabbitmq: false
     pod:
       replicas:
         api: 1
   wait:
     labels:
       release_group: keystone
-    timeout: 600
+    timeout: 900

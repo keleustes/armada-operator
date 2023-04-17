@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build v3
-
 package helmv3
 
 import (
@@ -29,20 +27,20 @@ import (
 	"path/filepath"
 	"strings"
 
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 	helmif "github.com/keleustes/armada-operator/pkg/services"
 
 	yaml "gopkg.in/yaml.v2"
-	"helm.sh/helm/pkg/kube"
-	"helm.sh/helm/pkg/storage"
-	cpb "helm.sh/helm/pkg/chart"
-	rpb "helm.sh/helm/pkg/release"
+	cpb "helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/kube"
+	rpb "helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/storage"
 )
 
 type chartmanager struct {
-	storageBackend   *storage.Storage
-	helmKubeClient   *kube.Client
-	chartLocation    *av1.ArmadaChartSource
+	storageBackend *storage.Storage
+	helmKubeClient *kube.Client
+	chartLocation  *av1.ArmadaChartSource
 
 	renderer    interface{}
 	releaseName string
@@ -109,7 +107,7 @@ func (m *chartmanager) Sync(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to get deployed release: %s", err)
 	}
-	m.deployedRelease = &helmif.HelmRelease{deployedRelease}
+	m.deployedRelease = &helmif.HelmRelease{Release: deployedRelease}
 	m.isInstalled = true
 
 	// Get the next candidate release to determine if an update is necessary.
@@ -196,14 +194,14 @@ func (m chartmanager) getCandidateRelease(ctx context.Context, renderder interfa
 func (m chartmanager) InstallRelease(ctx context.Context) (*helmif.HelmRelease, error) {
 	// installedRelease, err := installRelease(ctx, m.renderer, m.namespace, m.releaseName, m.chart, m.config)
 	var installedRelease = &rpb.Release{}
-	return &helmif.HelmRelease{installedRelease}, nil
+	return &helmif.HelmRelease{Release: installedRelease}, nil
 }
 
 // UpdateRelease performs a Helm release update.
 func (m chartmanager) UpdateRelease(ctx context.Context) (*helmif.HelmRelease, *helmif.HelmRelease, error) {
 	// updatedRelease, err := updateRelease(ctx, m.renderer, m.releaseName, m.chart, m.config)
 	var updatedRelease = &rpb.Release{}
-	return m.deployedRelease, &helmif.HelmRelease{updatedRelease}, nil
+	return m.deployedRelease, &helmif.HelmRelease{Release: updatedRelease}, nil
 }
 
 // ReconcileRelease creates or patches resources as necessary to match the
@@ -217,7 +215,7 @@ func (m chartmanager) ReconcileRelease(ctx context.Context) (*helmif.HelmRelease
 func (m chartmanager) UninstallRelease(ctx context.Context) (*helmif.HelmRelease, error) {
 	// uninstalledRelease, err := uninstallRelease(ctx, m.storageBackend, m.renderer, m.releaseName)
 	var uninstalledRelease = &rpb.Release{}
-	return &helmif.HelmRelease{uninstalledRelease}, nil
+	return &helmif.HelmRelease{Release: uninstalledRelease}, nil
 }
 
 func (m chartmanager) getChart() (*cpb.Chart, error) {
@@ -235,9 +233,9 @@ func (m chartmanager) getChart() (*cpb.Chart, error) {
 	if err != nil {
 		return nil, err
 	}
-        if pathToChart == "" {
+	if pathToChart == "" {
 		return nil, nil
-        }
+	}
 
 	return nil, nil
 }

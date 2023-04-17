@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build v3
-
 package helmv3
 
 import (
@@ -21,12 +19,12 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 	helmif "github.com/keleustes/armada-operator/pkg/services"
 
-	"helm.sh/helm/pkg/kube"
-	"helm.sh/helm/pkg/storage"
-	"helm.sh/helm/pkg/storage/driver"
+	"helm.sh/helm/v3/pkg/kube"
+	"helm.sh/helm/v3/pkg/storage"
+	"helm.sh/helm/v3/pkg/storage/driver"
 )
 
 type managerFactory struct {

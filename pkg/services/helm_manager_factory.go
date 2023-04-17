@@ -15,7 +15,7 @@
 package services
 
 import (
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 )
 
 // ManagerFactory creates Managers that are specific to custom resources. It is

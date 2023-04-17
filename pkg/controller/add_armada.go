@@ -20,7 +20,7 @@ import (
 
 func init() {
 	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
-	AddToManagerFuncs = append(AddToManagerFuncs, armada.AddArmadaManifestController)
-	AddToManagerFuncs = append(AddToManagerFuncs, armada.AddArmadaChartGroupController)
 	AddToManagerFuncs = append(AddToManagerFuncs, armada.AddArmadaChartController)
+	AddToManagerFuncs = append(AddToManagerFuncs, armada.AddArmadaChartGroupController)
+	AddToManagerFuncs = append(AddToManagerFuncs, armada.AddArmadaManifestController)
 }

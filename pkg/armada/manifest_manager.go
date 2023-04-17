@@ -17,14 +17,14 @@ package armada
 import (
 	"context"
 
-	av1 "github.com/keleustes/armada-operator/pkg/apis/armada/v1alpha1"
+	av1 "github.com/keleustes/armada-crd/pkg/apis/armada/v1alpha1"
 	armadaif "github.com/keleustes/armada-operator/pkg/services"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 var amflog = logf.Log.WithName("amf-manager")
@@ -36,12 +36,18 @@ type manifestmanager struct {
 	spec             *av1.ArmadaManifestSpec
 	status           *av1.ArmadaManifestStatus
 	deployedResource *av1.ArmadaChartGroups
+
+	isInstalled      bool
 	isUpdateRequired bool
 }
 
 // ResourceName returns the name of the release.
 func (m manifestmanager) ResourceName() string {
 	return m.resourceName
+}
+
+func (m manifestmanager) IsInstalled() bool {
+	return m.isInstalled
 }
 
 func (m manifestmanager) IsUpdateRequired() bool {
@@ -54,7 +60,7 @@ func (m *manifestmanager) Sync(ctx context.Context) error {
 	m.deployedResource = av1.NewArmadaChartGroups(m.resourceName)
 	errs := make([]error, 0)
 	targetResourceList := m.expectedChartGroupList()
-	for _, existingResource := range (*targetResourceList).List.Items {
+	for _, existingResource := range targetResourceList.List.Items {
 		err := m.kubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.Name, Namespace: existingResource.Namespace}, &existingResource)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
@@ -67,6 +73,8 @@ func (m *manifestmanager) Sync(ctx context.Context) error {
 		}
 	}
 
+	amflog.Info("ChartGroups", "deployedResources", m.deployedResource.States())
+
 	// The ChartGroup manager is not in charge of creating the ArmaChart since it
 	// only contains the name of the charts.
 	if len(errs) != 0 {
@@ -76,14 +84,37 @@ func (m *manifestmanager) Sync(ctx context.Context) error {
 		return errs[0]
 	}
 
-	// TODO(jeb): We should check here the "admin_state" of the ArmadaManifest compared
-	// it to the "admin_state" of the ArmadaChartGroups
 	// TODO(jeb): We should check that the ArmadaManifest is still not the "owner" of
-	// charts which are not listed in its Spec anymore. In such as case we should put
+	// chartgroups which are not listed in its Spec anymore. In such as case we should put
 	// the isUpdateRequired to true.
 	m.isUpdateRequired = false
-	return nil
+	m.isInstalled = true
+	if m.status.ActualState != av1.StateDeployed {
+		for _, deployedResource := range m.deployedResource.List.Items {
+			existingRefs := deployedResource.GetOwnerReferences()
+			if len(existingRefs) == 0 {
+				m.isInstalled = false
+			}
+		}
+	}
 
+	return nil
+}
+
+// InstallResource checks that the corresponding chartgroups are present
+// TODO(jeb): We should most likely update the target_state is not already done.
+// TODO(jeb): We should also update the the owner of the charts.
+func (m manifestmanager) InstallResource(ctx context.Context) (*av1.ArmadaChartGroups, error) {
+	installedResources := av1.NewArmadaChartGroups(m.resourceName)
+	targetResourceList := m.expectedChartGroupList()
+	for _, existingResource := range targetResourceList.List.Items {
+		err := m.kubeClient.Get(context.TODO(), types.NamespacedName{Name: existingResource.GetName(), Namespace: existingResource.GetNamespace()}, &existingResource)
+		if err == nil {
+			installedResources.List.Items = append(installedResources.List.Items, existingResource)
+		}
+	}
+
+	return installedResources, nil
 }
 
 // UpdateResource performs an update of an ArmadaManifest.
@@ -114,20 +145,25 @@ func (m manifestmanager) ReconcileResource(ctx context.Context) (*av1.ArmadaChar
 	errs := make([]error, 0)
 
 	// The main goal of the ArmadaManifest is to group together all the ChartGroups that need to
-	// be deployed. There is not concept of "sequencing/order" here.
-	chartGroupsToEnable := m.deployedResource.GetAllDisabledChartGroups()
+	// be deployed. The concept of sequencing is implicit here
+	chartGroupsToEnable := av1.NewArmadaChartGroups(m.resourceName)
+	nextToEnable := m.deployedResource.GetNextToEnable()
+	if nextToEnable != nil {
+		chartGroupsToEnable.List.Items = append(chartGroupsToEnable.List.Items, *nextToEnable)
+	}
+
 	for _, nextToEnable := range (*chartGroupsToEnable).List.Items {
 		found := nextToEnable.FromArmadaChartGroup()
 		err := m.kubeClient.Get(context.TODO(), types.NamespacedName{Name: found.GetName(), Namespace: found.GetNamespace()}, &nextToEnable)
 		if err == nil {
 			nextToEnable.Spec.TargetState = av1.StateDeployed
 			if err2 := m.kubeClient.Update(context.TODO(), &nextToEnable); err2 != nil {
-				acglog.Error(err, "Can't get enable of ArmadaChartGroup", "name", found.GetName())
+				amflog.Error(err, "Can't get enable of ArmadaChartGroup", "name", found.GetName())
 				errs = append(errs, err)
 			}
-			acglog.Info("Enabled ArmadaChartGroup", "name", found.GetName())
+			amflog.Info("Enabled ArmadaChartGroup", "name", found.GetName())
 		} else {
-			acglog.Error(err, "Can't enable ArmadaChartGroup", "name", found.GetName())
+			amflog.Error(err, "Can't enable ArmadaChartGroup", "name", found.GetName())
 			errs = append(errs, err)
 		}
 	}

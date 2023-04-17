@@ -11,8 +11,6 @@ spec:
     timeout: 3600
     labels:
       release_group: armada-mariadb
-  install:
-    no_hooks: false
   upgrade:
     no_hooks: false
   values: {}
@@ -23,6 +21,7 @@ spec:
     reference: master
   dependencies:
     - helm-toolkit
+  target_state: deployed
 ---
 apiVersion: armada.airshipit.org/v1alpha1
 kind: ArmadaChart
@@ -36,8 +35,6 @@ spec:
     timeout: 100
     labels:
       release_group: armada-memcached
-  install:
-    no_hooks: false
   upgrade:
     no_hooks: false
   values: {}
@@ -48,6 +45,7 @@ spec:
     reference: master
   dependencies:
     - helm-toolkit
+  target_state: deployed
 ---
 apiVersion: armada.airshipit.org/v1alpha1
 kind: ArmadaChart
@@ -63,8 +61,6 @@ spec:
     timeout: 100
     labels:
       release_group: armada-rabbitmq
-  install:
-    no_hooks: false
   upgrade:
     no_hooks: false
   values: {}
@@ -75,3 +71,4 @@ spec:
     reference: master
   dependencies:
     - helm-toolkit
+  target_state: deployed

@@ -1,10 +1,10 @@
+
+---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  labels:
-    controller-tools.k8s.io: "1.0"
-  name: armadarestores.armada.airshipit.org
+  name: armadabackups.armada.airshipit.org
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.actual_state
@@ -21,15 +21,18 @@ spec:
     type: boolean
   group: armada.airshipit.org
   names:
-    kind: ArmadaRestore
-    plural: armadarestores
+    kind: ArmadaBackup
+    listKind: ArmadaBackupList
+    plural: armadabackups
     shortNames:
-    - arst
+    - abck
+    singular: armadabackup
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
+      description: ArmadaBackup is the Schema for the armadabackups API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -44,21 +47,34 @@ spec:
         metadata:
           type: object
         spec:
+          description: ArmadaBackupSpec defines the desired state of ArmadaBackup
           properties:
-            backupStorageType:
-              description: BackupStorageType is the type of the backup storage which
-                is used as RestoreSource.
-              type: string
+            armadaEndpoints:
+              description: ArmadaEndpoints specifies the endpoints of an armada cluster.
+                When multiple endpoints are given, the backup operator retrieves the
+                backup from the endpoint that has the most up-to-date state. The given
+                endpoints must belong to the same armada cluster.
+              items:
+                type: string
+              type: array
+            backupPolicy:
+              description: BackupPolicy configures the backup process.
+              properties:
+                timeoutInSecond:
+                  description: TimeoutInSecond is the maximal allowed time in second
+                    of the entire backup process.
+                  format: int64
+                  type: integer
+              type: object
             ceph:
-              description: Ceph tells where on Ceph the backup is saved and how to
-                fetch the backup.
+              description: Ceph defines the Ceph backup source spec.
               properties:
                 cephSecret:
-                  description: 'The name of the secret object that stores the Google
+                  description: "The name of the secret object that stores the Google
                     storage credential containing at most ONE of the following: An
-                    access token with file name of ''access-token''. JSON credentials
-                    with file name of ''credentials.json''.  If omitted, client will
-                    use the default application credentials.'
+                    access token with file name of 'access-token'. JSON credentials
+                    with file name of 'credentials.json'. \n If omitted, client will
+                    use the default application credentials."
                   type: string
                 path:
                   description: 'Path is the full Ceph path where the backup is saved.
@@ -73,9 +89,14 @@ spec:
               items:
                 type: string
               type: array
+            clientTLSSecret:
+              description: 'ClientTLSSecret is the secret containing the armada TLS
+                client certs and must contain the following data items: data:    "armada-client.crt":
+                <pem-encoded-cert>    "armada-client.key": <pem-encoded-key>    "armada-client-ca.crt":
+                <pem-encoded-ca-cert>'
+              type: string
             offsite:
-              description: Offsite tells where on Offsite the backup is saved and
-                how to fetch the backup.
+              description: Offsite defines the Offsite backup source spec.
               properties:
                 endpoint:
                   description: Endpoint if blank points to offsite. If specified,
@@ -87,12 +108,12 @@ spec:
                     endpoint that doesn't support subdomain buckets.
                   type: boolean
                 offsiteSecret:
-                  description: The name of the secret object that stores the Offsite
+                  description: "The name of the secret object that stores the Offsite
                     credential and config files. The file name of the credential MUST
                     be 'credentials'. The file name of the config MUST be 'config'.
-                    The profile to use in both files will be 'default'.  OffsiteSecret
+                    The profile to use in both files will be 'default'. \n OffsiteSecret
                     overwrites the default armada operator wide Offsite credential
-                    and config.
+                    and config."
                   type: string
                 path:
                   description: 'Path is the full offsite path where the backup is
@@ -100,23 +121,37 @@ spec:
                     e.g: "mybucket/armada.backup"'
                   type: string
               required:
-              - path
-              - offsiteSecret
-              - endpoint
               - forcePathStyle
+              - offsiteSecret
+              - path
               type: object
+            storageType:
+              description: StorageType is the armada backup storage type. We need
+                this field because CRD doesn't support validation against invalid
+                fields and we cannot verify invalid backup storage source.
+              type: string
             targetState:
               description: Target state of the Helm Custom Resources
               type: string
           required:
-          - backupStorageType
+          - storageType
           type: object
         status:
+          description: ArmadaBackupStatus defines the observed state of ArmadaBackup
           properties:
+            actual_state:
+              description: Actual state of the Helm Custom Resources
+              type: string
             conditions:
               description: 'List of conditions and states related to the resource.
                 JEB: Feature kind of overlap with event recorder'
               items:
+                description: HelmResourceCondition represents one current condition
+                  of an Helm resource A condition might not show up if it is not happening.
+                  For example, if a chart is not deploying, the Deploying condition
+                  would not show up. If a chart is deploying and encountered a problem
+                  that prevents the deployment, the Deploying condition's status will
+                  would be False and communicate the problem back.
                 properties:
                   lastTransitionTime:
                     format: date-time
@@ -131,12 +166,14 @@ spec:
                     format: int32
                     type: integer
                   status:
+                    description: HelmResourceConditionStatus represents the current
+                      status of a Condition
                     type: string
                   type:
                     type: string
                 required:
-                - type
                 - status
+                - type
                 type: object
               type: array
             reason:
@@ -147,9 +184,15 @@ spec:
                 its target state
               type: boolean
           required:
+          - actual_state
           - satisfied
           type: object
+      type: object
   version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
 status:
   acceptedNames:
     kind: ""
