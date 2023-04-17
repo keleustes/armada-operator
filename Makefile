@@ -1,12 +1,10 @@
 
 # Image URL to use all building/pushing image targets
 COMPONENT        ?= armada-operator
-VERSION_V2       ?= 2.16.0
-VERSION_V3       ?= 3.0.0
+VERSION          ?= 1.27.1
 DHUBREPO         ?= keleustes/${COMPONENT}-dev
 DOCKER_NAMESPACE ?= keleustes
-IMG_V2           ?= ${DHUBREPO}:v${VERSION_V2}
-IMG_V3           ?= ${DHUBREPO}:v${VERSION_V3}
+IMG              ?= ${DHUBREPO}:v${VERSION}
 
 all: docker-build
 
@@ -75,27 +73,18 @@ vet: fmt
 #	cp ../armada-crd/kubectl/*.yaml chart/templates/
 
 # Build the docker image
-docker-build: fmt docker-build-v2
+docker-build: fmt docker-build-vx
 
-docker-build-v2:
+docker-build-vx:
 	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/...
-	docker build . -f build/Dockerfile -t ${IMG_V2}
-	docker tag ${IMG_V2} ${DHUBREPO}:latest
-
-docker-build-v3: vet-v3
-	GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/_output/bin/armada-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/...
-	docker build . -f build/Dockerfile -t ${IMG_V3}
-	docker tag ${IMG_V3} ${DHUBREPO}:latest
-
+	docker build . -f build/Dockerfile -t ${IMG}
+	docker tag ${IMG} ${DHUBREPO}:latest
 
 # Push the docker image
-docker-push: docker-push-v2
+docker-push: docker-push-vx
 
-docker-push-v2:
-	docker push ${IMG_V2}
-
-docker-push-v3:
-	docker push ${IMG_V3}
+docker-push-vx:
+	docker push ${IMG}
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 install: install-v2
