@@ -109,7 +109,7 @@ const (
 // Note: The Controller will requeue the Request to be processed again if the
 // returned error is non-nil or Result.Requeue is true, otherwise upon
 // completion it will remove the work from the queue.
-func (r *ChartReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ChartReconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reclog := actlog.WithValues("namespace", request.Namespace, "act", request.Name)
 	reclog.Info("Received a request")
 
