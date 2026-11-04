@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -77,17 +76,10 @@ func (m *chartmanager) Sync(ctx context.Context) error {
 	}
 
 	// Get release history for this release name
-	releases, err := m.storageBackend.History(m.releaseName)
-	if err != nil && !notFoundErr(err) {
+	// TODO: cleanup non-deployed release versions, so that a failed
+	// installation is retried when no release version is deployed.
+	if _, err := m.storageBackend.History(m.releaseName); err != nil && !notFoundErr(err) {
 		return fmt.Errorf("failed to retrieve release history: %s", err)
-	}
-
-	// Cleanup non-deployed release versions. If all release versions are
-	// non-deployed, this will ensure that failed installations are correctly
-	// retried.
-	for _, rel := range releases {
-		if rel.Info.Status != rpb.StatusDeployed {
-		}
 	}
 
 	// Load the chart and config based on the current state of the custom resource.
@@ -244,7 +236,7 @@ func (m *chartmanager) gitClone() (string, error) {
 	// TODO(Ian): Finish this method
 	repoURL := m.chartLocation.Location
 	if repoURL == "" {
-		return "", errors.New("Must provide a git url")
+		return "", errors.New("must provide a git url")
 	}
 	return "", nil
 }
@@ -259,7 +251,7 @@ func (m *chartmanager) getTarball() (string, error) {
 
 // downloadTarball Downloads a tarball to /tmp and returns the path
 func (m *chartmanager) downloadTarball(verify bool) (string, error) {
-	file, err := ioutil.TempFile("", "armada")
+	file, err := os.CreateTemp("", "armada")
 	if err != nil {
 		return "", err
 	}
@@ -268,11 +260,15 @@ func (m *chartmanager) downloadTarball(verify bool) (string, error) {
 		return "", err
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
+	defer func() { _ = response.Body.Close() }()
+
+	if _, err := io.Copy(file, response.Body); err != nil {
+		_ = file.Close()
 		return "", err
 	}
-	file.Write(body)
+	if err := file.Close(); err != nil {
+		return "", err
+	}
 
 	return file.Name(), nil
 }
@@ -286,7 +282,7 @@ func extractTarball(tarballPath string) (string, error) {
 		return "", err
 	}
 
-	tempDir, err := ioutil.TempDir("", "armada")
+	tempDir, err := os.MkdirTemp("", "armada")
 	if err != nil {
 		return "", err
 	}
@@ -300,7 +296,7 @@ func extractTarball(tarballPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer gzr.Close()
+	defer func() { _ = gzr.Close() }()
 
 	tr := tar.NewReader(gzr)
 
@@ -347,17 +343,15 @@ func readFromArchive(tr *tar.Reader, dir string) error {
 
 		// copy over contents
 		if _, err := io.Copy(f, tr); err != nil {
+			_ = f.Close()
 			return err
 		}
 
 		// manually close here after each file operation; defering would cause each file close
 		// to wait until all operations have completed.
-		f.Close()
+		if err := f.Close(); err != nil {
+			return err
+		}
 	}
-	return nil
-}
-
-func sourceCleanup(path string) error {
-	// TODO(Ian): Finish this method
 	return nil
 }
