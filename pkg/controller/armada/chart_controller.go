@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	crthandler "sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -48,7 +49,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 		BaseReconciler: BaseReconciler{
 			client:   mgr.GetClient(),
 			scheme:   mgr.GetScheme(),
-			recorder: mgr.GetEventRecorderFor("act-recorder"),
+			recorder: mgr.GetEventRecorderFor("act-recorder"), //nolint:staticcheck // recorder is a record.EventRecorder; the events API migration is separate
 		},
 		managerFactory: helmmgr.NewManagerFactory(mgr),
 	}
@@ -68,7 +69,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Watch for changes to primary resource ArmadaChart
 	// EnqueueRequestForObject enqueues a Request containing the Name and Namespace of the object
 	// that is the source of the Event. (e.g. the created / deleted / updated objects Name and Namespace).
-	err = c.Watch(&source.Kind{Type: &av1.ArmadaChart{}}, &crthandler.EnqueueRequestForObject{})
+	err = c.Watch(source.Kind(mgr.GetCache(), client.Object(&av1.ArmadaChart{}), &crthandler.EnqueueRequestForObject{}))
 	if err != nil {
 		return err
 	}
@@ -137,7 +138,7 @@ func (r *ChartReconciler) Reconcile(ctx context.Context, request reconcile.Reque
 	var shouldRequeue bool
 	if shouldRequeue, err = r.updateFinalizers(instance); shouldRequeue {
 		// Need to requeue because finalizer update does not change metadata.generation
-		return reconcile.Result{Requeue: true}, err
+		return reconcile.Result{Requeue: true}, err //nolint:staticcheck // rate-limited requeue; RequeueAfter is a fixed delay
 	}
 
 	if err := r.ensureSynced(mgr, instance); err != nil {
@@ -151,7 +152,7 @@ func (r *ChartReconciler) Reconcile(ctx context.Context, request reconcile.Reque
 	if instance.IsDeleted() {
 		if shouldRequeue, err = r.deleteArmadaChart(mgr, instance); shouldRequeue {
 			// Need to requeue because finalizer update does not change metadata.generation
-			return reconcile.Result{Requeue: true}, err
+			return reconcile.Result{Requeue: true}, err //nolint:staticcheck // rate-limited requeue; RequeueAfter is a fixed delay
 		}
 		return reconcile.Result{}, err
 	}
@@ -197,7 +198,7 @@ func (r *ChartReconciler) Reconcile(ctx context.Context, request reconcile.Reque
 
 	reclog.Info("Reconciled ArmadaChart")
 	if err = r.updateResourceStatus(instance); err != nil {
-		return reconcile.Result{Requeue: true}, err
+		return reconcile.Result{Requeue: true}, err //nolint:staticcheck // rate-limited requeue; RequeueAfter is a fixed delay
 	}
 	return reconcile.Result{}, nil
 }

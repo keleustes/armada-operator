@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	crthandler "sigs.k8s.io/controller-runtime/pkg/handler"
@@ -49,7 +50,7 @@ func AddArmadaChartGroupController(mgr manager.Manager) error {
 		BaseReconciler: BaseReconciler{
 			client:          mgr.GetClient(),
 			scheme:          mgr.GetScheme(),
-			recorder:        mgr.GetEventRecorderFor("acg-recorder"),
+			recorder:        mgr.GetEventRecorderFor("acg-recorder"), //nolint:staticcheck // recorder is a record.EventRecorder; the events API migration is separate
 			reconcilePeriod: reconcilePeriod,
 		},
 		managerFactory: armadamgr.NewManagerFactory(mgr),
@@ -64,7 +65,7 @@ func AddArmadaChartGroupController(mgr manager.Manager) error {
 	// Watch for changes to primary resource ArmadaChartGroup
 	// EnqueueRequestForObject enqueues a Request containing the Name and Namespace of the object
 	// that is the source of the Event. (e.g. the created / deleted / updated objects Name and Namespace).
-	err = c.Watch(&source.Kind{Type: &av1.ArmadaChartGroup{}}, &crthandler.EnqueueRequestForObject{})
+	err = c.Watch(source.Kind(mgr.GetCache(), client.Object(&av1.ArmadaChartGroup{}), &crthandler.EnqueueRequestForObject{}))
 	if err != nil {
 		return err
 	}
@@ -75,12 +76,9 @@ func AddArmadaChartGroupController(mgr manager.Manager) error {
 	// IsController if set will only look at the first OwnerReference with Controller: true.
 	act := av1.NewArmadaChartVersionKind("", "")
 	dependentPredicate := r.BuildDependentPredicate()
-	err = c.Watch(&source.Kind{Type: act},
-		&crthandler.EnqueueRequestForOwner{
-			IsController: true,
-			OwnerType:    &av1.ArmadaChartGroup{},
-		},
-		*dependentPredicate)
+	err = c.Watch(source.Kind(mgr.GetCache(), client.Object(act),
+		crthandler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &av1.ArmadaChartGroup{}, crthandler.OnlyControllerOwner()),
+		*dependentPredicate))
 	if err != nil {
 		return err
 	}
@@ -140,7 +138,7 @@ func (r *ChartGroupReconciler) Reconcile(ctx context.Context, request reconcile.
 	var shouldRequeue bool
 	if shouldRequeue, err = r.updateFinalizers(instance); shouldRequeue {
 		// Need to requeue because finalizer update does not change metadata.generation
-		return reconcile.Result{Requeue: true}, err
+		return reconcile.Result{Requeue: true}, err //nolint:staticcheck // rate-limited requeue; RequeueAfter is a fixed delay
 	}
 
 	if err := r.ensureSynced(mgr, instance); err != nil {
@@ -154,7 +152,7 @@ func (r *ChartGroupReconciler) Reconcile(ctx context.Context, request reconcile.
 	if instance.IsDeleted() {
 		if shouldRequeue, err = r.deleteArmadaChartGroup(mgr, instance); shouldRequeue {
 			// Need to requeue because finalizer update does not change metadata.generation
-			return reconcile.Result{Requeue: true}, err
+			return reconcile.Result{Requeue: true}, err //nolint:staticcheck // rate-limited requeue; RequeueAfter is a fixed delay
 		}
 		return reconcile.Result{}, err
 	}
@@ -202,7 +200,7 @@ func (r *ChartGroupReconciler) Reconcile(ctx context.Context, request reconcile.
 
 	reclog.Info("Reconciled ChartGroup")
 	if err = r.updateResourceStatus(instance); err != nil {
-		return reconcile.Result{Requeue: true}, err
+		return reconcile.Result{Requeue: true}, err //nolint:staticcheck // rate-limited requeue; RequeueAfter is a fixed delay
 	}
 	return reconcile.Result{}, nil
 }

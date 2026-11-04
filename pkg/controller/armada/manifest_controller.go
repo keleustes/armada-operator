@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	crthandler "sigs.k8s.io/controller-runtime/pkg/handler"
@@ -49,7 +50,7 @@ func AddArmadaManifestController(mgr manager.Manager) error {
 		BaseReconciler: BaseReconciler{
 			client:          mgr.GetClient(),
 			scheme:          mgr.GetScheme(),
-			recorder:        mgr.GetEventRecorderFor("amf-recorder"),
+			recorder:        mgr.GetEventRecorderFor("amf-recorder"), //nolint:staticcheck // recorder is a record.EventRecorder; the events API migration is separate
 			reconcilePeriod: reconcilePeriod,
 		},
 		managerFactory: armadamgr.NewManagerFactory(mgr),
@@ -64,7 +65,7 @@ func AddArmadaManifestController(mgr manager.Manager) error {
 	// Watch for changes to primary resource ArmadaManifest
 	// EnqueueRequestForObject enqueues a Request containing the Name and Namespace of the object
 	// that is the source of the Event. (e.g. the created / deleted / updated objects Name and Namespace).
-	err = c.Watch(&source.Kind{Type: &av1.ArmadaManifest{}}, &crthandler.EnqueueRequestForObject{})
+	err = c.Watch(source.Kind(mgr.GetCache(), client.Object(&av1.ArmadaManifest{}), &crthandler.EnqueueRequestForObject{}))
 	if err != nil {
 		return err
 	}
@@ -75,12 +76,9 @@ func AddArmadaManifestController(mgr manager.Manager) error {
 	// IsController if set will only look at the first OwnerReference with Controller: true.
 	acg := av1.NewArmadaChartGroupVersionKind("", "")
 	dependentPredicate := r.BuildDependentPredicate()
-	err = c.Watch(&source.Kind{Type: acg},
-		&crthandler.EnqueueRequestForOwner{
-			IsController: true,
-			OwnerType:    &av1.ArmadaManifest{},
-		},
-		*dependentPredicate)
+	err = c.Watch(source.Kind(mgr.GetCache(), client.Object(acg),
+		crthandler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &av1.ArmadaManifest{}, crthandler.OnlyControllerOwner()),
+		*dependentPredicate))
 	if err != nil {
 		return err
 	}
@@ -139,7 +137,7 @@ func (r *ManifestReconciler) Reconcile(ctx context.Context, request reconcile.Re
 	var shouldRequeue bool
 	if shouldRequeue, err = r.updateFinalizers(instance); shouldRequeue {
 		// Need to requeue because finalizer update does not change metadata.generation
-		return reconcile.Result{Requeue: true}, err
+		return reconcile.Result{Requeue: true}, err //nolint:staticcheck // rate-limited requeue; RequeueAfter is a fixed delay
 	}
 
 	if err := r.ensureSynced(mgr, instance); err != nil {
@@ -153,7 +151,7 @@ func (r *ManifestReconciler) Reconcile(ctx context.Context, request reconcile.Re
 	if instance.IsDeleted() {
 		if shouldRequeue, err = r.deleteArmadaManifest(mgr, instance); shouldRequeue {
 			// Need to requeue because finalizer update does not change metadata.generation
-			return reconcile.Result{Requeue: true}, err
+			return reconcile.Result{Requeue: true}, err //nolint:staticcheck // rate-limited requeue; RequeueAfter is a fixed delay
 		}
 		return reconcile.Result{}, err
 	}
@@ -199,7 +197,7 @@ func (r *ManifestReconciler) Reconcile(ctx context.Context, request reconcile.Re
 
 	reclog.Info("Reconciled ArmadaManifest")
 	if err = r.updateResourceStatus(instance); err != nil {
-		return reconcile.Result{Requeue: true}, err
+		return reconcile.Result{Requeue: true}, err //nolint:staticcheck // rate-limited requeue; RequeueAfter is a fixed delay
 	}
 	return reconcile.Result{}, nil
 }
