@@ -11,6 +11,7 @@ import (
 	"github.com/keleustes/armada-operator/pkg/controller"
 	"github.com/keleustes/armada-operator/pkg/k8sutil"
 
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -63,8 +64,13 @@ func main() {
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
+	// An empty namespace watches all namespaces.
+	cacheOpts := cache.Options{}
+	if namespace != "" {
+		cacheOpts.DefaultNamespaces = map[string]cache.Config{namespace: {}}
+	}
 	mgr, err := manager.New(cfg, manager.Options{
-		Namespace: namespace,
+		Cache: cacheOpts,
 		// MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
 	})
 	if err != nil {

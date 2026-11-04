@@ -324,7 +324,7 @@ func (obj *KubernetesDependency) IsServiceReady(u *unstructured.Unstructured) bo
 		return false
 	}
 
-	endpointsu := corev1.Endpoints{}
+	endpointsu := corev1.Endpoints{} //nolint:staticcheck // the dependency watches Endpoints; EndpointSlice migration is separate
 	err1u := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &endpointsu)
 	if err1u != nil {
 		return false
@@ -343,7 +343,7 @@ func (obj *KubernetesDependency) IsServiceFailedOrError(u *unstructured.Unstruct
 		return false
 	}
 
-	endpointsu := corev1.Endpoints{}
+	endpointsu := corev1.Endpoints{} //nolint:staticcheck // the dependency watches Endpoints; EndpointSlice migration is separate
 	err1u := runtime.DefaultUnstructuredConverter.FromUnstructured(u.UnstructuredContent(), &endpointsu)
 	if err1u != nil {
 		return false

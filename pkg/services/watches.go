@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -71,7 +72,8 @@ func BuildDependentResourceWatchUpdater(mgr manager.Manager, owner *unstructured
 				continue
 			}
 
-			err = c.Watch(&source.Kind{Type: &u}, &crthandler.EnqueueRequestForOwner{OwnerType: owner}, dependentPredicate)
+			err = c.Watch(source.Kind(mgr.GetCache(), client.Object(&u),
+				crthandler.EnqueueRequestForOwner(mgr.GetScheme(), restMapper, owner), dependentPredicate))
 			if err != nil {
 				wlog.Error(err, "Add Watch to Controller")
 				return err
