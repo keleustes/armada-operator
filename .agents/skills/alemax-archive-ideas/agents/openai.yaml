@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alemax Archive Ideas"
+  short_description: "Archive completed ideas by capability"
+  default_prompt: "Use $alemax-archive-ideas to run this workflow."

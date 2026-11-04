@@ -1,0 +1,521 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# --- private-deps-auth (disabled by default; spec `private-repo-free-org`) ---------
+# Enable when this repo pins a PRIVATE sibling — a git source in pyproject.toml/uv.lock
+# or go.mod: a runner has no ssh key and no token, so the sibling answers 404 "not
+# found" (never 403) and `uv sync` reads as "repository not found", not as auth.
+# Needs PRIVATE_DEPS_TOKEN (fine-grained PAT, Contents: read on the siblings) in BOTH
+# GitHub stores — Actions AND Dependabot — `bin/sync-secrets.py push PRIVATE_DEPS_TOKEN
+# --app both --apply`; a Dependabot-triggered run reads only the Dependabot store.
+# Uncomment the step into every job that resolves dependencies (lint, type-check, test),
+# right after `actions/checkout`, byte-identical, so the 3-way merge on the next
+# broadcast stays clean. uv and go both shell out to git for a git source, so the
+# insteadOf rewrite covers both; a private PACKAGE INDEX needs UV_INDEX_<NAME>_USERNAME /
+# _PASSWORD (or GOPROXY credentials) instead — not this block.
+#
+#      - name: private-deps-auth
+#        env:
+#          PRIVATE_DEPS_TOKEN: ${{ secrets.PRIVATE_DEPS_TOKEN }}
+#          PRIVATE_DEPS_PROBE: https://github.com/<org>/<sibling>.git # one private sibling
+#        run: |
+#          if [[ -z "$PRIVATE_DEPS_TOKEN" ]]; then
+#            echo "::error::PRIVATE_DEPS_TOKEN is empty for this run (Dependabot runs read only the Dependabot store)"
+#            exit 1
+#          fi
+#          base="https://x-access-token:${PRIVATE_DEPS_TOKEN}@github.com/"
+#          git config --global url."$base".insteadOf "https://github.com/"
+#          git config --global --add url."$base".insteadOf "ssh://git@github.com/"
+#          git config --global --add url."$base".insteadOf "git@github.com:"
+#          echo "GOPRIVATE=github.com/<org>/*" >> "$GITHUB_ENV" # go: skip proxy + sumdb for the org
+#          git ls-remote --exit-code "$PRIVATE_DEPS_PROBE" HEAD >/dev/null # a bad token fails HERE, readably
+
+jobs:
+  detect:
+    name: Detect stack
+    runs-on: ubuntu-latest
+    # A stalled runner step otherwise holds the job to GitHub's 6 h ceiling and drains the
+    # org's shared Actions minutes; a healthy run of any job here takes a few minutes.
+    timeout-minutes: 15
+    outputs:
+      python: ${{ steps.detect.outputs.python }}
+      bash: ${{ steps.detect.outputs.bash }}
+      bats: ${{ steps.detect.outputs.bats }}
+      go: ${{ steps.detect.outputs.go }}
+      xcode: ${{ steps.detect.outputs.xcode }}
+      image: ${{ steps.detect.outputs.image }}
+      rust: ${{ steps.detect.outputs.rust }}
+      rust_dirs: ${{ steps.detect.outputs.rust_dirs }}
+      java: ${{ steps.detect.outputs.java }}
+      java_dirs: ${{ steps.detect.outputs.java_dirs }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Two commits: on a pull_request the checkout is the merge commit, so HEAD^1 is the
+          # base tip and `git diff HEAD^1 HEAD` is exactly what the PR changes.
+          fetch-depth: 2
+      - id: detect
+        run: |
+          if [[ -f pyproject.toml ]]; then
+            echo "python=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "python=false" >> "$GITHUB_OUTPUT"
+          fi
+          if compgen -G "bin/*" >/dev/null || compgen -G "tests/*.bats" >/dev/null; then
+            echo "bash=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "bash=false" >> "$GITHUB_OUTPUT"
+          fi
+          # `bats` gates the actual test run — true only when .bats files exist,
+          # so a project with bin/ scripts but no bats suite doesn't fail on
+          # `bats tests/` ("Found no tests"). `bash` still gates shell linting.
+          if compgen -G "tests/*.bats" >/dev/null; then
+            echo "bats=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "bats=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ -f go.mod ]]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          fi
+          # `xcode` gates the macOS job, which bills at 10x a Linux runner against the
+          # org's shared pool: true only when the repo has an Xcode project AND this event
+          # touches it. A push to main always counts, so main stays verified; a pull
+          # request counts only when its diff reaches xcode/ or bin/xcode. A failed diff
+          # fails the step rather than silently skipping the job.
+          xcode=false
+          if [[ -f xcode/project.yml ]]; then
+            if [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
+              xcode=true
+            else
+              changed="$(git diff --name-only HEAD^1 HEAD)"
+              if grep -Eq '^(xcode/|bin/xcode$)' <<<"$changed"; then
+                xcode=true
+              fi
+            fi
+          fi
+          echo "xcode=$xcode" >> "$GITHUB_OUTPUT"
+          # `image` gates image-check, a build of every platform (spec container-image):
+          # true only when the repo has a Dockerfile (root or one folder down) AND this event
+          # touches what goes into an image. A push to main always counts; a pull request
+          # counts when its diff reaches a Dockerfile, a .dockerignore, the Makefile, or the
+          # source of a stack that ships an image. A failed diff fails the step.
+          # The root Makefile must also define docker-buildx-check, the target the job runs:
+          # a project older than the contract (its own Makefile or build script) skips the
+          # job instead of failing every push to main once a broadcast delivers it.
+          image=false
+          if { compgen -G "Dockerfile" >/dev/null || compgen -G "*/Dockerfile" >/dev/null; } \
+            && grep -Eq '^docker-buildx-check[[:space:]]*:' Makefile 2>/dev/null; then
+            if [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
+              image=true
+            else
+              changed="$(git diff --name-only HEAD^1 HEAD)"
+              if grep -Eq '(^|/)Dockerfile$|(^|/)\.dockerignore$|^Makefile$|\.go$|(^|/)go\.(mod|sum)$|\.rs$|(^|/)Cargo\.(toml|lock)$|(^|/)rust-toolchain\.toml$' <<<"$changed"; then
+                image=true
+              fi
+            fi
+          fi
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          # `rust` gates the rust and cargo-deny jobs (spec rust-stack); `rust_dirs` is the
+          # JSON list of crate folders they run in: the repo root when it holds Cargo.toml
+          # (a root workspace covers its members), otherwise each top-level folder holding
+          # one (rust/, rust-blinkt/). A push to main always counts; a pull request counts
+          # when its diff reaches a crate folder or bin/rust.
+          crates=()
+          if [[ -f Cargo.toml ]]; then
+            crates=(.)
+          else
+            for f in */Cargo.toml; do
+              if [[ -f "$f" ]]; then crates+=("${f%/Cargo.toml}"); fi
+            done
+          fi
+          rust=false
+          if (( ${#crates[@]} > 0 )); then
+            if [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
+              rust=true
+            else
+              changed="$(git diff --name-only HEAD^1 HEAD)"
+              for c in "${crates[@]}"; do
+                if [[ "$c" == "." ]]; then
+                  pat='\.rs$|(^|/)Cargo\.(toml|lock)$|(^|/)rust-toolchain\.toml$|(^|/)deny\.toml$|^bin/rust$'
+                else
+                  pat="^$c/|^bin/rust\$"
+                fi
+                if grep -Eq "$pat" <<<"$changed"; then rust=true; fi
+              done
+            fi
+            dirs_json="$(printf '%s\n' "${crates[@]}" | jq -R . | jq -sc .)"
+          else
+            dirs_json='[]'
+          fi
+          echo "rust=$rust" >> "$GITHUB_OUTPUT"
+          echo "rust_dirs=$dirs_json" >> "$GITHUB_OUTPUT"
+          # `java` gates the java and java-lint jobs (spec java-stack); `java_dirs` is the JSON
+          # list of Maven folders they run in: the repo root when it holds pom.xml (a root pom
+          # covers its modules), otherwise each top-level folder holding one (java/). A push to
+          # main always counts; a pull request counts when its diff reaches a Maven folder or
+          # bin/jvm.
+          poms=()
+          if [[ -f pom.xml ]]; then
+            poms=(.)
+          else
+            for f in */pom.xml; do
+              if [[ -f "$f" ]]; then poms+=("${f%/pom.xml}"); fi
+            done
+          fi
+          java=false
+          if (( ${#poms[@]} > 0 )); then
+            if [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
+              java=true
+            else
+              changed="$(git diff --name-only HEAD^1 HEAD)"
+              for c in "${poms[@]}"; do
+                if [[ "$c" == "." ]]; then
+                  pat='\.java$|(^|/)pom\.xml$|(^|/)\.mvn/|^bin/jvm$'
+                else
+                  pat="^$c/|^bin/jvm\$"
+                fi
+                if grep -Eq "$pat" <<<"$changed"; then java=true; fi
+              done
+            fi
+            java_json="$(printf '%s\n' "${poms[@]}" | jq -R . | jq -sc .)"
+          else
+            java_json='[]'
+          fi
+          echo "java=$java" >> "$GITHUB_OUTPUT"
+          echo "java_dirs=$java_json" >> "$GITHUB_OUTPUT"
+
+  lint:
+    name: lint
+    needs: detect
+    runs-on: ubuntu-latest
+    # A stalled runner step otherwise holds the job to GitHub's 6 h ceiling and drains the
+    # org's shared Actions minutes; a healthy run of any job here takes a few minutes.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      # Held at v7 — the LAST major with a bare `@vN` tag. setup-uv v8.0.0 stopped
+      # publishing major/minor tags on purpose (supply-chain hardening, post
+      # tj-actions), so `@v8`, `@v9` and `@v10` DO NOT EXIST as refs: a workflow
+      # naming one fails to resolve the action before a single step runs. That is
+      # what broke fresh bootstraps, not the v9/v10 behaviour changes.
+      # Moving forward is therefore NOT a major-tag bump — it needs a full version
+      # (`@v10.0.1`) or a commit SHA, applied to all three occurrences in this file.
+      # Check the tag resolves before shipping any bump here:
+      #   gh api repos/astral-sh/setup-uv/git/ref/tags/<tag>
+      - name: Install uv
+        if: needs.detect.outputs.python == 'true'
+        uses: astral-sh/setup-uv@v7
+      - name: ruff
+        if: needs.detect.outputs.python == 'true'
+        run: |
+          uv sync --locked
+          uv run ruff check .
+          uv run ruff format --check .
+      # The downloads get their own step and the 5-minute bound: apt-get and curl are where
+      # runs hang. The check itself is bounded only by the job, so a large repo is not cut off.
+      - name: Install shellcheck + shfmt
+        timeout-minutes: 5
+        if: needs.detect.outputs.bash == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
+          curl -sSfL "https://github.com/mvdan/sh/releases/download/v3.13.1/shfmt_v3.13.1_linux_amd64" -o /tmp/shfmt
+          chmod +x /tmp/shfmt && sudo mv /tmp/shfmt /usr/local/bin/shfmt
+      - name: shellcheck + shfmt
+        if: needs.detect.outputs.bash == 'true'
+        run: |
+          # Only scan tracked shell files — avoids recursing into .venv, etc.
+          # bin/ also holds Python tools (bin/check-doc-set.py); shellcheck rejects those.
+          mapfile -t sh_files < <(git ls-files '*.sh' '*.bash' 'bin/*' | grep -Ev '^(\.venv|node_modules|dist|build)/|\.py$' || true)
+          if [[ ${#sh_files[@]} -gt 0 ]]; then
+            shellcheck "${sh_files[@]}"
+            shfmt -d -i 2 -ci -bn "${sh_files[@]}"
+          fi
+
+  type-check:
+    name: type-check
+    needs: detect
+    if: needs.detect.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    # A stalled runner step otherwise holds the job to GitHub's 6 h ceiling and drains the
+    # org's shared Actions minutes; a healthy run of any job here takes a few minutes.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - run: |
+          uv sync --locked
+          uv run mypy src
+
+  test:
+    name: test
+    needs: detect
+    runs-on: ubuntu-latest
+    # A stalled runner step otherwise holds the job to GitHub's 6 h ceiling and drains the
+    # org's shared Actions minutes; a healthy run of any job here takes a few minutes.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        if: needs.detect.outputs.python == 'true'
+        uses: astral-sh/setup-uv@v7
+      - name: pytest
+        if: needs.detect.outputs.python == 'true'
+        run: |
+          uv sync --locked
+          uv run pytest
+      - name: Install bats
+        timeout-minutes: 5  # apt-get is where runs hang; the suite itself is bounded by the job
+        if: needs.detect.outputs.bats == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bats
+      - name: bats
+        if: needs.detect.outputs.bats == 'true'
+        run: bats tests/
+
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-latest
+    # A stalled runner step otherwise holds the job to GitHub's 6 h ceiling and drains the
+    # org's shared Actions minutes; a healthy run of any job here takes a few minutes.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Use the gitleaks binary directly — gitleaks-action requires a paid
+      # license for org-owned repos, and we don't need its PR-comment features.
+      - name: Install gitleaks
+        timeout-minutes: 5  # curl is where runs hang; the full-history scan is bounded by the job
+        run: |
+          GITLEAKS_VERSION=8.21.2
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz -C /tmp gitleaks
+      - name: gitleaks
+        run: /tmp/gitleaks detect --source . --redact --verbose
+
+  # Go / operator jobs — gated on go.mod presence (per go-stack-profile).
+  # All four are skipped on python/bash-only repos (detect.outputs.go == 'false').
+  go-build:
+    name: go-build
+    needs: detect
+    if: needs.detect.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    # A stalled runner step otherwise holds the job to GitHub's 6 h ceiling and drains the
+    # org's shared Actions minutes; a healthy run of any job here takes a few minutes.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go build ./...
+
+  go-vet:
+    name: go-vet
+    needs: detect
+    if: needs.detect.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    # A stalled runner step otherwise holds the job to GitHub's 6 h ceiling and drains the
+    # org's shared Actions minutes; a healthy run of any job here takes a few minutes.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go vet ./...
+
+  go-test:
+    name: go-test
+    needs: detect
+    if: needs.detect.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    # A stalled runner step otherwise holds the job to GitHub's 6 h ceiling and drains the
+    # org's shared Actions minutes; a healthy run of any job here takes a few minutes.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go test ./... -race -coverprofile=cover.out
+
+  golangci-lint:
+    name: golangci-lint
+    needs: detect
+    if: needs.detect.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    # A stalled runner step otherwise holds the job to GitHub's 6 h ceiling and drains the
+    # org's shared Actions minutes; a healthy run of any job here takes a few minutes.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      # Action, binary and config move together (spec toolchain-versions): action v9 runs
+      # golangci-lint v2, `version:` equals GOLANGCI_VERSION in meta/bootstrap/stacks/go.sh, # shipped-path-provenance
+      # and that scaffolder writes the v2 `.golangci.yml` schema (`version: "2"`). A project
+      # still on a v1 `.golangci.yml` fails here until it runs `golangci-lint migrate`;
+      # `alemax lint toolchain` and /alemax:complete-update name that fix. A retrofitted
+      # repo with no `.golangci.yml` runs the action's defaults.
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.15.0
+
+  # Xcode job — gated on xcode/project.yml AND an Xcode-touching event (see detect).
+  # Skipped on every project without an Xcode part; init-project.sh deletes it outright
+  # from a project whose stacks do not include xcode.
+  xcode:
+    name: xcode
+    needs: detect
+    if: needs.detect.outputs.xcode == 'true'
+    runs-on: macos-latest
+    # macOS runners are slower to start and build than Linux ones; still bounded, so a
+    # stalled step cannot hold the job to GitHub's 6 h ceiling at 10x the minute cost.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        timeout-minutes: 5  # brew is where runs hang; the build is bounded by the job
+        run: brew install xcodegen
+      - name: build + test
+        run: bin/xcode test
+
+  image-check:
+    name: image-check
+    needs: detect
+    if: needs.detect.outputs.image == 'true'
+    runs-on: ubuntu-latest
+    # A two-platform build is among the slowest jobs here; bounded like every other job.
+    timeout-minutes: 30
+    # Build every platform, push nothing: images are published by hand with
+    # `make docker-buildx` (spec container-image). No registry login, no credentials.
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+        with:
+          # Docker Hub rate-limits anonymous pulls per runner IP (429); pull through Google's mirror.
+          buildkitd-config-inline: |
+            [registry."docker.io"]
+              mirrors = ["mirror.gcr.io"]
+      - name: build every platform (no push)
+        run: make docker-buildx-check
+
+  rust:
+    name: rust (${{ matrix.dir }})
+    needs: detect
+    if: needs.detect.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    # A cold cargo build is the slowest job here; bounded like every other job.
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.detect.outputs.rust_dirs) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v7
+      # The runner's rustup installs the toolchain the crate's rust-toolchain.toml pins.
+      - name: toolchain from rust-toolchain.toml
+        run: rustup toolchain install && rustup show active-toolchain
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ${{ matrix.dir }}
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --locked -- -D warnings
+      - run: cargo test --locked
+
+  cargo-deny:
+    name: cargo-deny (${{ matrix.dir }})
+    needs: detect
+    if: needs.detect.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.detect.outputs.rust_dirs) }}
+    steps:
+      - uses: actions/checkout@v7
+      # With the crate's deny.toml: advisories, licences, bans and sources.
+      - if: hashFiles(format('{0}/deny.toml', matrix.dir)) != ''
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: ${{ matrix.dir }}/Cargo.toml
+          command-arguments: --config ${{ matrix.dir }}/deny.toml
+      # Without one, licences cannot be judged (cargo-deny's default allows none), so only
+      # advisories: a crate gains the full check by adding a deny.toml.
+      - if: hashFiles(format('{0}/deny.toml', matrix.dir)) == ''
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: ${{ matrix.dir }}/Cargo.toml
+          command: check advisories
+
+  java:
+    name: java (${{ matrix.dir }})
+    needs: detect
+    if: needs.detect.outputs.java == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.detect.outputs.java_dirs) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v7
+      # JDK 25, the LTS java-stack projects compile for (maven.compiler.release 25) and the
+      # `java` machine profile installs (spec java-stack). A project pinned to another release
+      # sets java-version to match.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+      - run: mvn -B verify
+
+  java-lint:
+    name: java-lint (${{ matrix.dir }})
+    needs: detect
+    if: needs.detect.outputs.java == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.detect.outputs.java_dirs) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v7
+      # The lint profile (-Dlint) runs Error Prone and fails on any javac or Error Prone
+      # warning, on the same JDK as the java job. A project without a `lint` profile just builds.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+      - run: mvn -B -Dlint verify

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alemax Feedback"
+  short_description: "Capture structured feedback in the current repo"
+  default_prompt: "Use $alemax-feedback to run this workflow."

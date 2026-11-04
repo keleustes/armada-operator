@@ -1,0 +1,65 @@
+{
+  "outputStyle": "Concise",
+  "skillListingMaxDescChars": 300,
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(openspec *)",
+      "Bash(uv run *)",
+      "Bash(uv lock *)",
+      "Bash(uv sync *)",
+      "Bash(pre-commit run *)",
+      "Bash(printf *)",
+      "Bash(cat *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(sed -n *)",
+      "Bash(sort *)",
+      "Bash(cut *)",
+      "Bash(wc *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(cmp *)",
+      "Bash(date *)",
+      "Bash(mkdir -p .local/*)",
+      "Edit(.local/**)",
+      "Read(//tmp/**)",
+      "SendMessage",
+      "ListAgents",
+      "Agent",
+      "ToolSearch"
+    ],
+    "deny": [],
+    "ask": [
+      "Bash(security *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|NotebookEdit|Bash|Glob|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --quiet --script \"${CLAUDE_PROJECT_DIR}\"/.claude/hooks/scope-guard.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --quiet --script \"${CLAUDE_PROJECT_DIR}\"/.claude/hooks/home-volume-check.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

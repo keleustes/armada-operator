@@ -1,0 +1,10 @@
+{
+  "name": "alemax",
+  "description": "The alemax operator workflow family: session checkpointing, feedback and ideas capture, project bootstrap and completion, fleet broadcast, Dependabot merges, and cross-session messaging. Each skill is invoked as /alemax:<name>.",
+  "author": {
+    "name": "alemax"
+  },
+  "homepage": "https://github.com/alemaxdesign/claude-meta",
+  "license": "MIT",
+  "version": "1.2.0"
+}

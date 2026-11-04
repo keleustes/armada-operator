@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alemax Reprioritise Ideas"
+  short_description: "Curate the suggested next-up ideas list"
+  default_prompt: "Use $alemax-reprioritise-ideas to run this workflow."

@@ -1,0 +1,39 @@
+# Stack-agnostic base. This file ships to every project and carries only the
+# `github-actions` ecosystem, which every stack has. Each stack scaffolder
+# (meta/bootstrap/stacks/*.sh) APPENDS the ecosystem matching --stack after the # shipped-path-provenance
+# templates are rsynced: python -> uv, go -> gomod, rust -> cargo (/rust), java -> maven (/java),
+# bash -> nothing further.
+#
+# Never add `pip` or `npm` here: a project without the corresponding manifest
+# red-fails on every Dependabot run, and standing red trains operators to
+# ignore Dependabot output — which is how a real advisory gets missed.
+#
+# Propagation class M (see scaffolding/propagation-policy.yaml): the block
+# below is merge-propagated, and the stack block a project appended locally
+# survives the 3-way merge as a local addition.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+# Private sibling dependencies (spec `private-repo-free-org`). Dependabot cannot
+# authenticate an ssh:// git source of a private repo — its credential proxy is
+# HTTPS + x-access-token only — so it never bumps the sibling, and a `uv`/`gomod`
+# entry that must clone it to resolve the graph can fail outright. Either register
+# the host under `registries:` (type git, username x-access-token, password from a
+# DEPENDABOT secret — never an Actions secret) and switch the pin to https, or tell
+# Dependabot to leave the sibling alone and bump it locally per release
+# (`uv lock --upgrade-package <sibling>` / `go get -u <module>`; the local checks
+# are the merge gate). The `ignore:` belongs on the stack's entry, which the stack
+# scaffolder appends below at bootstrap:
+#
+#  - package-ecosystem: "uv"
+#    directory: "/"
+#    schedule:
+#      interval: "weekly"
+#    open-pull-requests-limit: 5
+#    ignore:
+#      - dependency-name: "<sibling>" # private ssh source; bumped by hand per release
