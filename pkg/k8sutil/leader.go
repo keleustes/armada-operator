@@ -133,8 +133,8 @@ func myOwnerRef(ctx context.Context, client crclient.Client, ns string) (*metav1
 	owner := &metav1.OwnerReference{
 		APIVersion: "v1",
 		Kind:       "Pod",
-		Name:       myPod.ObjectMeta.Name,
-		UID:        myPod.ObjectMeta.UID,
+		Name:       myPod.Name,
+		UID:        myPod.UID,
 	}
 	return owner, nil
 }

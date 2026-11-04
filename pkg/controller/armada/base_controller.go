@@ -26,11 +26,8 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	crtpredicate "sigs.k8s.io/controller-runtime/pkg/predicate"
 )
-
-var phaselog = logf.Log.WithName("base-controller")
 
 // BaseReconciler reconciles custom resources as Workflow, Jobs....
 type BaseReconciler struct {

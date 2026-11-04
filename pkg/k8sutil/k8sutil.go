@@ -17,7 +17,6 @@ package k8sutil
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -46,7 +45,7 @@ var ErrNoNamespace = fmt.Errorf("namespace not found for current environment")
 
 // GetOperatorNamespace returns the namespace the operator should be running in.
 func GetOperatorNamespace() (string, error) {
-	nsBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+	nsBytes, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
 	if err != nil {
 		if os.IsNotExist(err) {
 			return "", ErrNoNamespace
@@ -110,8 +109,8 @@ func GetPod(ctx context.Context, client crclient.Client, ns string) (*corev1.Pod
 
 	// .Get() clears the APIVersion and Kind,
 	// so we need to set them before returning the object.
-	pod.TypeMeta.APIVersion = "v1"
-	pod.TypeMeta.Kind = "Pod"
+	pod.APIVersion = "v1"
+	pod.Kind = "Pod"
 
 	log.V(1).Info("Found Pod", "Pod.Namespace", ns, "Pod.Name", pod.Name)
 
@@ -128,7 +127,7 @@ func GetGVKsFromAddToScheme(addToSchemeFunc func(*runtime.Scheme) error) ([]sche
 	}
 	schemeAllKnownTypes := s.AllKnownTypes()
 	ownGVKs := []schema.GroupVersionKind{}
-	for gvk, _ := range schemeAllKnownTypes {
+	for gvk := range schemeAllKnownTypes {
 		if !isKubeMetaKind(gvk.Kind) {
 			ownGVKs = append(ownGVKs, gvk)
 		}
