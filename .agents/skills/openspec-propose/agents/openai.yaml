@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Propose"
+  short_description: "Create a complete OpenSpec change proposal"
+  default_prompt: "Use $openspec-propose to run this workflow."

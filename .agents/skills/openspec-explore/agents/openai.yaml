@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Explore"
+  short_description: "Explore requirements without implementing code"
+  default_prompt: "Use $openspec-explore to run this workflow."

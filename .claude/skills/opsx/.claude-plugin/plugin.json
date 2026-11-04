@@ -1,0 +1,10 @@
+{
+  "name": "opsx",
+  "description": "OpenSpec spec-driven workflows: propose a change, explore an idea, apply its tasks, sync delta specs into main specs, and archive it when done. Each workflow is invoked as /opsx:<name>. Requires the openspec CLI on PATH.",
+  "version": "1.0.0",
+  "author": {
+    "name": "alemax"
+  },
+  "homepage": "https://github.com/alemaxdesign/claude-meta",
+  "license": "MIT"
+}

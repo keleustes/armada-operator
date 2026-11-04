@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alemax Tidy AIML"
+  short_description: "Reshape an AIML branch into canonical history"
+  default_prompt: "Use $alemax-tidy-aiml to run this workflow."

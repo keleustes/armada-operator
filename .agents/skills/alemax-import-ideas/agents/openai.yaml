@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alemax Import Ideas"
+  short_description: "Route mobile-captured ideas into project backlogs"
+  default_prompt: "Use $alemax-import-ideas to run this workflow."

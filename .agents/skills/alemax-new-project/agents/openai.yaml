@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alemax New Project"
+  short_description: "Bootstrap a project through the meta workflow"
+  default_prompt: "Use $alemax-new-project to run this workflow."

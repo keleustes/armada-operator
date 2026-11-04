@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alemax Back Burner"
+  short_description: "Checkpoint and wind down a coding task"
+  default_prompt: "Use $alemax-back-burner to run this workflow."

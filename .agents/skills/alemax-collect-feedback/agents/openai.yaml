@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alemax Collect Feedback"
+  short_description: "Collect local feedback into the canonical backlog"
+  default_prompt: "Use $alemax-collect-feedback to run this workflow."

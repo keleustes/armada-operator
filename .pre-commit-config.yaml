@@ -1,0 +1,172 @@
+# Pre-commit hooks. Install once with `pre-commit install`.
+# Run all hooks against the working tree: `pre-commit run --all-files`.
+#
+# Decision (2026-04-24): hooks BLOCK on lint/format/secret failures.
+# Adjust if friction outweighs value.
+
+minimum_pre_commit_version: "3.5.0"
+# Hooks run at commit unless they say otherwise. A project that also installs the pre-push
+# hook type (the rust stack does, for clippy) would otherwise rerun every hook on push.
+default_stages: [pre-commit]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+
+  # Python
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.3
+    hooks:
+      - id: ruff-check
+        args: ["--fix"]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.3.1
+    hooks:
+      - id: mypy
+        additional_dependencies: []
+        files: ^src/
+
+  # Bash
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.13.1-1
+    hooks:
+      - id: shfmt
+        args: ["-i", "2", "-ci", "-bn", "-d"]
+
+  # Rust (rust stack: the crate in rust/). language: system, so cargo is the machine's
+  # rustup proxy and honours rust/rust-toolchain.toml. Inert in a repository without
+  # rust/*.rs. clippy compiles, so it runs on push (`pre-commit install --hook-type
+  # pre-push`, which init-project.sh does for a rust project), not on every commit.
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt --check (rust/)
+        entry: cargo fmt --manifest-path rust/Cargo.toml -- --check
+        language: system
+        files: ^rust/.*\.rs$
+        pass_filenames: false
+      - id: cargo-clippy
+        name: cargo clippy -D warnings (rust/)
+        entry: cargo clippy --manifest-path rust/Cargo.toml --all-targets --locked -- -D warnings
+        language: system
+        files: ^rust/.*\.rs$
+        pass_filenames: false
+        stages: [pre-push]
+
+  # Secret scanning
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # The three-doc set (CLAUDE.md · README.md · architecture.md). Fires only when one
+  # of the three is staged — at the root, or under docs/ or openspec/ where it does
+  # not belong. Refuses two mechanical defects (a doc under docs/ instead of the
+  # root; a CLAUDE.md whose first paragraph no longer names the other two) and
+  # warns on everything else. `uv run --script bin/check-doc-set.py --help`.
+  - repo: local
+    hooks:
+      - id: check-doc-set
+        name: doc set (CLAUDE.md · README.md · architecture.md)
+        entry: uv run --quiet --script bin/check-doc-set.py
+        language: system
+        files: (?i)^(docs/|openspec/)?(CLAUDE\.md|README\.md|architecture\.md)$
+        pass_filenames: false
+
+  # The startup context budget (spec `context-budget`): CLAUDE.md, every `@import` it makes,
+  # and every `.claude/rules/*.md` with no `paths:` frontmatter — the set a session pays for
+  # before it reads any code. Fires only when one of those is staged. Refuses a fenced code
+  # block in CLAUDE.md and an `@import` of an index.md or of any file over 5,000 tokens (past
+  # that, a compaction hands back a path with no content); warns on the 120/400-line budgets,
+  # a ledger entry with no since/enforced by/depth/retire when, and an unscoped rules file
+  # over 60 lines. `uv run --script bin/claude-md-check.py --help`.
+  - repo: local
+    hooks:
+      - id: claude-md-check
+        name: startup budget (CLAUDE.md · @imports · .claude/rules)
+        entry: uv run --quiet --script bin/claude-md-check.py
+        language: system
+        files: (?i)^(CLAUDE\.md|\.claude/(CLAUDE\.md|rules/.*\.md))$
+        pass_filenames: false
+
+  # The thin-skill contract (.claude/skills · .claude/commands). Fires only when a skill or a
+  # command file is staged. Refuses a staged skill without name/description/context or without
+  # metadata.reviewed_model + reviewed, a fenced block that is not single-line invocations
+  # (uv · python3 · git · gh), a script path that does not exist, a command stub whose skill
+  # does not exist, and a stub PAIRED with a skill whose description is a summary rather than a
+  # routing line (D2 — substance in both files is what drifts); warns on a double listing (D1:
+  # one capability, two entries in a budgeted listing) and the rest.
+  # `uv run --script bin/skill-check.py --help`.
+  - repo: local
+    hooks:
+      - id: skill-check
+        name: skills (thin body · provenance · live script paths)
+        entry: uv run --quiet --script bin/skill-check.py
+        language: system
+        files: ^\.claude/(skills|commands)/.*\.md$
+        pass_filenames: false
+
+  # Variables, never resolved paths (spec `claude-consistency-lint`). Fires only when an
+  # INSTRUCTION-BEARING file is staged — the three root docs, any SKILL.md, claude/{commands,
+  # rules,hooks}/**, bin/**, and a scripts/ beside a skill — because that is where a literal
+  # path is a direction a session follows. `openspec/specs/**` is deliberately NOT here: a spec
+  # whose subject is drive layout writes resolved paths as worked examples, and 60 of the
+  # check's first 61 findings were exactly that. `--include-specs` widens it by hand.
+  # Refuses a path whose drive or account segment names ONE machine, passes the placeholder
+  # forms (`/Volumes/AIML0NN/…`, `/Users/$(whoami)/…` — the `system-path-rule` spelling, which
+  # this check agrees with), and skips a line marked `path-literal-ok` / `path-literal-docs`.
+  # Deliberate literals go in `.claude/path-literal-allow.txt`, one per line with a required
+  # trailing `# <reason>`; an entry with no reason is itself a refusal.
+  # `uv run --script bin/path-literal-check.py --help`.
+  - repo: local
+    hooks:
+      - id: path-literal-check
+        name: literal paths (variables, never one machine's path)
+        entry: uv run --quiet --script bin/path-literal-check.py
+        language: system
+        files: (?i)^((CLAUDE|README|architecture)\.md|.*/SKILL\.md|.*claude/(commands|rules|hooks)/.*\.(md|py|sh)|(.*/)?bin/.*\.(md|py|sh)|.*/scripts/.*\.(md|py|sh))$
+        pass_filenames: false
+
+  # Intent · spec · plan on every in-flight change (spec `claude-consistency-lint`). Fires only
+  # when a change directory is staged. OpenSpec repos: proposal.md · specs/*/spec.md · tasks.md
+  # under openspec/changes/ (archive/ excluded); repos with no OpenSpec: the playbook's
+  # intent/<change>/{intent,spec,plan}.md; neither present, nothing to check. Refuses a missing
+  # or empty intent or plan document; the spec-delta rule is `openspec validate --strict`'s and
+  # warns here only so the triad is reported in one place.
+  # `uv run --script bin/change-triad-check.py --help`.
+  - repo: local
+    hooks:
+      - id: change-triad-check
+        name: change triad (intent · spec · plan)
+        entry: uv run --quiet --script bin/change-triad-check.py
+        language: system
+        files: ^(openspec/changes/(?!archive/)|intent/).*$
+        pass_filenames: false
+
+  # The data-tree declaration (data.yaml, spec `data-repo-convention`). Fires only when
+  # data.yaml is staged: refuses a path inside the code repo, a public-forge remote, an
+  # unset variable, or a path that does not exist on this machine (`SKIP=data-check` to
+  # commit a declaration written for another machine). `uv run --script bin/data-check.py --help`.
+  - repo: local
+    hooks:
+      - id: data-check
+        name: data trees (data.yaml — outside the repo, non-public remotes)
+        entry: uv run --quiet --script bin/data-check.py
+        language: system
+        files: ^data\.yaml$
+        pass_filenames: false

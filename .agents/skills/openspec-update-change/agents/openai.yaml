@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Update Change"
+  short_description: "Reconcile an OpenSpec change's planning artifacts"
+  default_prompt: "Use $openspec-update-change to run this workflow."

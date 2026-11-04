@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alemax Merge Dependabot PR"
+  short_description: "Rebase and merge one stale Dependabot PR"
+  default_prompt: "Use $alemax-dependabot-merge to run this workflow."

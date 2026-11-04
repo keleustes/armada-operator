@@ -1,0 +1,32 @@
+[project]
+name = "alemax"
+version = "1.2.0"
+# THE VERSION OF THE OPERATING SURFACE — skills and code together, because they ship
+# together and a consumer cannot have one without the other. Equal to
+# `.claude-plugin/plugin.json`'s by `tests/test_version.py`; the plugin manifest's series
+# is the one projects already see, so it continues from 1.0.0 rather than restarting at
+# the repo tag (a version that appears to go backwards is worse than one that is merely
+# decoupled from the tag).
+description = "The /alemax:* family — developed as a package, shipped as a vendored zero-install artifact."
+requires-python = ">=3.14"
+# EMPTY, AND ENFORCED EMPTY. Everything here is vendored into a project clone that
+# installs nothing and may be offline; `build.py --check-purity` refuses any import
+# outside the standard library that is reachable from the shipped tree.
+dependencies = []
+
+[project.scripts]
+alemax = "alemax.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/alemax"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

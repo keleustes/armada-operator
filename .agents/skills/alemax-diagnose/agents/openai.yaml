@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alemax Diagnose"
+  short_description: "Scaffold a structured diagnosis document"
+  default_prompt: "Use $alemax-diagnose to run this workflow."

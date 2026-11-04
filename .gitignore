@@ -1,0 +1,72 @@
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Obsidian (per-vault state when the project is opened as a vault)
+.obsidian/
+.trash/
+
+# Environment / secrets — NEVER commit
+.env
+.env.*
+!.env.example
+
+# Rust and Java — cargo's and Maven's build output, at any depth (rust/target/, java/target/)
+target/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Node (for tooling like prettier/markdownlint)
+node_modules/
+
+# Bats (test artifacts)
+*.tap
+
+# Logs and tmp
+*.log
+tmp/
+.tmp/
+
+# Project-local data (re-include if you actually want to ship samples)
+data/
+
+# Operator scratch (never committed)
+/.local/
+prototypes/
+
+# Claude Code operator-local settings (per-operator, never committed). Reconciled
+# against the tracked floor .claude/settings-template.json by bin/reconcile-settings.py,
+# which creates the file by hand — so this line, not Claude Code's global exclude,
+# keeps it out of git. This repo never tracks a .claude/settings.json.
+.claude/settings.local.json
+
+# Claude Code worktrees (`claude --worktree`, subagent isolation) — inside a session's scope,
+# never committed (spec sibling-access-practice)
+.claude/worktrees/

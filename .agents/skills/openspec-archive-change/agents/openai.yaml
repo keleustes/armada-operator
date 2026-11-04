@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Archive Change"
+  short_description: "Finalize and archive an OpenSpec change"
+  default_prompt: "Use $openspec-archive-change to run this workflow."
